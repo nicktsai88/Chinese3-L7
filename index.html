@@ -363,15 +363,45 @@
         function updateFavoriteButton() { let favs = getFavoriteBank(); let btn = document.getElementById('btn-favorite'); if (favs.length > 0) { btn.style.display = 'inline-block'; document.getElementById('favorite-count').innerText = favs.length; } else { btn.style.display = 'none'; } }
         function toggleFavorite() { const currentQ = currentQuizQuestions[currentQuestionIndex]; let favs = getFavoriteBank(); if (favs.includes(currentQ.id)) { favs = favs.filter(id => id !== currentQ.id); } else { favs.push(currentQ.id); } localStorage.setItem(getUserKey('favoriteBank'), JSON.stringify(favs)); updateFavoriteUI(); }
         function updateFavoriteUI() { const currentQ = currentQuizQuestions[currentQuestionIndex]; let favs = getFavoriteBank(); let btn = document.getElementById('btn-toggle-favorite'); if (favs.includes(currentQ.id)) { btn.innerText = '❤️'; } else { btn.innerText = '🤍'; } }
-        function checkAnswer(btn, selectedOption, questionData) {
-            const buttons = document.querySelectorAll('.option-btn'); buttons.forEach(button => button.disabled = true); userAnswers[questionData.id] = selectedOption;
-            const correctCode = questionData.answer.substring(0, 1); 
-            const selectedCode = selectedOption.substring(0, 1); 
-            // 模糊比對
-            const isCorrect = (questionData.answer.includes(selectedCode) || selectedOption.includes(questionData.answer));
+       function checkAnswer(btn, selectedOption, questionData) {
+            const buttons = document.querySelectorAll('.option-btn'); 
+            buttons.forEach(button => button.disabled = true); 
+            userAnswers[questionData.id] = selectedOption;
+
+            // 🟢 修正重點：使用正則表達式 (Regex) 取出第一個英文字母 (A, B, C...)
+            // 這樣可以忽略括號 ( ) 或 （ ） 的影響，精準比對字母
+            const getLetter = (str) => {
+                const match = str.match(/[A-Za-z]/);
+                return match ? match[0].toUpperCase() : "";
+            };
+
+            const correctCode = getLetter(questionData.answer);
+            const selectedCode = getLetter(selectedOption);
             
-            if (isCorrect) { btn.classList.add('correct'); score++; audioCorrect.play().catch(e=>{}); confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 }, colors: ['#D4AF37', '#8B0000'] }); if (isMistakeMode) removeFromMistakeBank(questionData.id); } else { btn.classList.add('wrong'); audioFail.play().catch(e=>{}); buttons.forEach(button => { if (button.innerText.includes(questionData.answer) || questionData.answer.includes(button.innerText.substring(0,1))) button.classList.add('correct'); }); addToMistakeBank(questionData.id); }
-            document.getElementById('explanation-text').innerText = questionData.explanation || "暫無解析"; document.getElementById('explanation').style.display = 'block'; document.getElementById('next-btn').style.display = 'block';
+            // 進行嚴格比對
+            const isCorrect = (correctCode === selectedCode);
+            
+            if (isCorrect) { 
+                btn.classList.add('correct'); 
+                score++; 
+                audioCorrect.play().catch(e=>{}); 
+                confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 }, colors: ['#D4AF37', '#8B0000'] }); 
+                if (isMistakeMode) removeFromMistakeBank(questionData.id); 
+            } else { 
+                btn.classList.add('wrong'); 
+                audioFail.play().catch(e=>{}); 
+                // 🟢 修正：錯誤時，顯示正確答案的按鈕邏輯也一併更新
+                buttons.forEach(button => { 
+                    const btnLetter = getLetter(button.innerText);
+                    if (btnLetter === correctCode) {
+                        button.classList.add('correct'); 
+                    }
+                }); 
+                addToMistakeBank(questionData.id); 
+            }
+            document.getElementById('explanation-text').innerText = questionData.explanation || "暫無解析"; 
+            document.getElementById('explanation').style.display = 'block'; 
+            document.getElementById('next-btn').style.display = 'block';
         }
         function nextQuestion() { currentQuestionIndex++; let progress = ((currentQuestionIndex) / currentQuizQuestions.length) * 100; document.getElementById('progress-bar').style.width = progress + "%"; if (currentQuestionIndex < currentQuizQuestions.length) loadQuestion(); else setTimeout(showResult, 500); }
         function showResult() {
