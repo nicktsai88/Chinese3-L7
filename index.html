@@ -7,469 +7,964 @@
     <link href="https://fonts.googleapis.com/css2?family=CwTeXYen:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* 國文科：法家/衙門風格配色 */
+        /* --- 變數定義 --- */
         :root {
-            --primary-color: #2c3e50;   /* 官服藍深色 (莊重) */
-            --secondary-color: #c0392b; /* 硃批紅 (權威) */
-            --bg-color: #f4f6f7;        /* 卷宗白 */
+            --primary-color: #2c3e50;   /* 官服藍 (標準模式) */
+            --secondary-color: #c0392b; /* 硃批紅 */
+            --speed-color: #8e44ad;     /* 極速紫 (刷題模式) */
+            --bg-color: #f4f6f7;
             --text-color: #2c3e50;
             --accent-color: #e74c3c;
             --correct-color: #27ae60;
             --wrong-color: #c0392b;
             --locked-color: #bdc3c7;
-            --music-btn-color: #7f8c8d;
             --favorite-color: #e91e63;
         }
 
         body { 
             font-family: 'CwTeXYen', "Microsoft JhengHei", Arial, sans-serif; 
-            max-width: 900px; margin: 0 auto; padding: 20px; 
+            max-width: 1000px; margin: 0 auto; padding: 20px; 
             background-color: var(--bg-color); color: var(--text-color);
-            background-image: radial-gradient(#bdc3c7 1px, transparent 1px);
-            background-size: 20px 20px; min-height: 100vh;
+            /* 背景圖片設定 */
+            background-image: url('images/background.jpg');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            min-height: 100vh;
         }
 
-        h1 { font-size: 2.8em; color: var(--primary-color); text-align: center; margin-top: 0; text-shadow: 2px 2px 0px rgba(255,255,255,0.5); font-weight: bold; letter-spacing: 2px;}
+        /* 遮罩層，確保文字在背景圖上清晰 */
+        body::before {
+            content: ""; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.85); z-index: -1;
+        }
+
+        h1 { font-size: 2.5em; color: var(--primary-color); text-align: center; margin-top: 0; text-shadow: 2px 2px 0px rgba(255,255,255,0.5); font-weight: bold; letter-spacing: 2px;}
         h2, h3 { color: var(--primary-color); text-align: center; }
 
         /* --- 主要容器 --- */
         .quiz-container { 
-            background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 15px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 6px double var(--primary-color); 
+            background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 4px solid var(--primary-color); 
             position: relative; overflow: hidden; min-height: 500px;
         }
-        /* 裝飾角花 */
-        .quiz-container::before { content: " "; position: absolute; top: 5px; left: 5px; width: 30px; height: 30px; border-top: 3px solid var(--primary-color); border-left: 3px solid var(--primary-color); }
-        .quiz-container::after { content: " "; position: absolute; bottom: 5px; right: 5px; width: 30px; height: 30px; border-bottom: 3px solid var(--primary-color); border-right: 3px solid var(--primary-color); }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.5s ease-out; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
 
-        /* --- 按鈕樣式 --- */
+        /* --- 按鈕通用樣式 --- */
         .btn {
             background-color: var(--primary-color); color: #FFF; border: none;
-            padding: 12px 28px; font-size: 1.3em; border-radius: 8px;
-            cursor: pointer; transition: 0.3s; box-shadow: 0 4px 0 #1a252f;
-            font-family: inherit; font-weight: bold; margin: 8px; display: inline-block; letter-spacing: 1px;
+            padding: 10px 24px; font-size: 1.2em; border-radius: 8px;
+            cursor: pointer; transition: 0.2s; box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            font-family: inherit; font-weight: bold; margin: 5px; display: inline-block;
         }
-        .btn:hover { transform: translateY(-3px); opacity: 0.9; }
+        .btn:hover { transform: translateY(-2px); opacity: 0.95; }
         .btn:active { transform: translateY(2px); box-shadow: none; }
+        .btn:disabled { background-color: #bdc3c7; cursor: not-allowed; box-shadow: none; transform: none; }
         
-        .btn-green { background-color: var(--correct-color); box-shadow: 0 4px 0 #1e8449; }
-        .btn-red { background-color: var(--accent-color); box-shadow: 0 4px 0 #922b21; }
-        .btn-gray { background-color: #95a5a6; box-shadow: 0 4px 0 #7f8c8d; }
-        .btn-blue { background-color: #2980b9; box-shadow: 0 4px 0 #1a5276; }
-        .btn-pink { background-color: var(--favorite-color); box-shadow: 0 4px 0 #c2185b; }
+        .btn-green { background-color: var(--correct-color); }
+        .btn-red { background-color: var(--accent-color); }
+        .btn-purple { background-color: var(--speed-color); }
+        .btn-gray { background-color: #7f8c8d; }
+        .btn-blue { background-color: #2980b9; }
+        .btn-pink { background-color: var(--favorite-color); }
         
-        .btn-sm { padding: 8px 16px; font-size: 1em; margin: 0 2px; box-shadow: 0 2px 0 rgba(0,0,0,0.3); border-radius: 5px;}
-        
-        /* 音樂按鈕特殊樣式 */
-        .btn-music { 
-            background-color: #95A5A6; box-shadow: 0 2px 0 #7F8C8D; opacity: 0.7; transition: all 0.3s ease;
-        }
-        .btn-music.playing {
-            background-color: #3498DB; box-shadow: 0 2px 0 #2980B9; opacity: 1; animation: pulse 2s infinite; 
-        }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(52, 152, 219, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); } }
+        .btn-sm { padding: 6px 12px; font-size: 0.9em; box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+        .btn-music { background-color: #95A5A6; opacity: 0.7; }
+        .btn-music.playing { background-color: #3498DB; opacity: 1; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(52, 152, 219, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); } }
 
+        /* --- 登入畫面 --- */
         input[type="text"] {
-            padding: 12px; font-size: 1.5em; border: 2px solid var(--primary-color); background-color: #FFF;
-            border-radius: 8px; margin: 15px; font-family: inherit; text-align: center; width: 80%; color: var(--text-color);
+            padding: 10px; font-size: 1.3em; border: 2px solid var(--primary-color); background-color: #FFF;
+            border-radius: 8px; margin: 10px; font-family: inherit; text-align: center; width: 80%; max-width: 300px;
         }
-        .quick-login-area { margin-top: 15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-        .user-tag {
-            background: #fff; border: 2px solid var(--primary-color); padding: 8px 15px; border-radius: 20px;
-            cursor: pointer; font-size: 1.1em; transition: 0.2s; color: var(--primary-color); display: flex; align-items: center; gap: 8px; 
-        }
-        .user-tag:hover { background: var(--primary-color); color: white; }
-        .delete-user { font-size: 0.9em; cursor: pointer; padding: 2px 6px; border-radius: 50%; background: rgba(0,0,0,0.1); transition: 0.2s; }
-        .delete-user:hover { background: var(--wrong-color); color: white; transform: scale(1.2); }
-
         .avatar-selection { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
         .avatar-option {
-            width: 80px; height: 80px; border-radius: 50%; border: 4px solid transparent;
-            cursor: pointer; transition: 0.3s; object-fit: cover; background: #FFF; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            width: 70px; height: 70px; border-radius: 50%; border: 3px solid transparent;
+            cursor: pointer; transition: 0.2s; object-fit: cover; background: #FFF;
         }
-        .avatar-option:hover { transform: scale(1.1); }
-        .avatar-option.selected { border-color: var(--primary-color); box-shadow: 0 0 15px var(--secondary-color); transform: scale(1.1); background: #ecf0f1; }
+        .avatar-option.selected { border-color: var(--primary-color); transform: scale(1.1); box-shadow: 0 0 10px var(--primary-color); }
+        .user-tag { 
+            display: inline-flex; align-items: center; background: #FFF; border: 1px solid var(--primary-color); 
+            padding: 5px 10px; border-radius: 20px; cursor: pointer; margin: 3px; font-size: 0.9em;
+        }
 
-        /* --- 關卡地圖樣式 --- */
-        #level-screen {
-            background-image: url('images/qing_map.jpg'); /* 可自行更換背景圖 */
-            background-color: #bdc3c7; 
-            background-size: cover; background-position: center; background-repeat: no-repeat;
-            border: 4px double var(--primary-color); box-shadow: inset 0 0 50px rgba(0,0,0,0.3);
-            border-radius: 10px; padding: 20px; min-height: 500px; position: relative; z-index: 1;
-        }
-        @media (orientation: portrait) { #level-screen { min-height: 80vh; background-position: center top; } .level-map-container { gap: 30px; margin-top: 40px; } }
+        /* --- 儀表板 (Dashboard) --- */
+        .dashboard-layout { display: flex; flex-wrap: wrap; gap: 20px; height: 100%; }
+        .dashboard-left { flex: 2; min-width: 300px; border-right: 2px dashed #bdc3c7; padding-right: 15px; }
+        .dashboard-right { flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 15px; }
 
-        .level-map-container { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 20px 0; }
-        .level-row { display: flex; justify-content: center; align-items: center; gap: 15px; }
-        .level-row.reverse { flex-direction: row-reverse; }
-        .level-wrapper { display: flex; align-items: center; position: relative; }
-        .map-avatar {
-            position: absolute; top: -60px; left: 50%; transform: translateX(-50%); width: 60px; height: 60px; z-index: 10;
-            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3)); animation: float 2s infinite ease-in-out;
+        @media (max-width: 768px) {
+            .dashboard-layout { flex-direction: column; }
+            .dashboard-left { border-right: none; border-bottom: 2px dashed #bdc3c7; padding-bottom: 20px; padding-right: 0; }
         }
-        @keyframes float { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-10px); } }
+
+        /* 關卡 Grid */
+        .level-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 15px; margin-top: 15px;
+        }
+        .level-btn-grid {
+            aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: #FFF; border: 3px solid var(--primary-color); border-radius: 10px; cursor: pointer;
+            transition: 0.2s; position: relative; color: var(--primary-color);
+        }
+        .level-btn-grid:hover:not(:disabled) { transform: translateY(-3px); background: #ecf0f1; }
+        .level-btn-grid:disabled { background: #eee; border-color: #bdc3c7; color: #999; cursor: not-allowed; }
+        .level-num { font-size: 1.5em; font-weight: bold; }
+        .level-stars { font-size: 0.8em; margin-top: 3px; }
+
+        /* 右側面板區塊 */
+        .panel-box {
+            background: #FFF; border-radius: 10px; padding: 15px; border: 2px solid #bdc3c7; box-shadow: 0 3px 5px rgba(0,0,0,0.05);
+        }
+        .panel-box.purple-theme { border-color: var(--speed-color); background: #fbf4ff; }
+        .panel-box h3 { margin: 0 0 10px 0; font-size: 1.2em; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 5px;}
         
-        .level-btn {
-            background-color: rgba(255, 255, 255, 0.9); border: 4px solid var(--primary-color); border-radius: 50%; 
-            width: 100px; height: 100px; font-size: 1.1em; cursor: pointer; transition: 0.2s; color: var(--primary-color);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.3); position: relative; z-index: 2;
-        }
-        .level-title { white-space: nowrap; font-weight: bold; margin-bottom: 5px; font-family: 'CwTeXYen'; }
-        .level-btn:hover:not(:disabled) { background-color: #ecf0f1; transform: scale(1.1) rotate(3deg); }
-        .level-btn:disabled { background-color: #bdc3c7; border-color: var(--locked-color); color: #7f8c8d; cursor: not-allowed; }
-        .level-score { font-size: 0.8em; color: var(--correct-color); font-weight: bold; }
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 1.1em; color: #555; }
+        .resume-btn-area { margin-top: 10px; text-align: center; }
 
-        .arrow-icon { font-size: 2.5em; color: var(--primary-color); margin: 0 5px; text-shadow: 2px 2px 0 rgba(255,255,255,0.9); z-index: 1; display: block; }
-        .arrow-right { animation: bounceRight 2s infinite; }
-        .arrow-left { animation: bounceLeft 2s infinite; transform: scaleX(-1); }
-        .arrow-down { animation: bounceDown 2s infinite; font-size: 3em; line-height: 0.5; margin: -5px 0; }
-        @keyframes bounceRight { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
-        @keyframes bounceLeft { 0%, 100% { transform: translateX(0) scaleX(-1); } 50% { transform: translateX(-5px) scaleX(-1); } }
-        @keyframes bounceDown { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
-        .row-connector { width: 100%; display: flex; height: 40px; align-items: center; justify-content: flex-end; padding-right: 50px; box-sizing: border-box; }
-        .row-connector.left { justify-content: flex-start; padding-left: 50px; padding-right: 0; }
-
-        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; padding: 10px; }
-        .card-item {
-            position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.3); aspect-ratio: 2/3; cursor: pointer; transition: 0.3s; background: #ecf0f1; border: 4px solid #FFF;
-        }
-        .card-item:hover { transform: scale(1.05); z-index: 5; box-shadow: 0 8px 16px rgba(0,0,0,0.4); border-color: var(--secondary-color); }
-        .card-img { width: 100%; height: 100%; object-fit: cover; transition: filter 0.3s; }
-        .card-item.locked .card-img { filter: grayscale(90%) sepia(20%) opacity(0.5); }
-        .card-item.locked { cursor: default; background: #bdc3c7; }
-        .card-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.1);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; color: #555; text-align: center;
-        }
-        .card-lock-icon { font-size: 3em; margin-bottom: 5px; color: var(--primary-color); opacity: 0.7;}
-        .card-label { position: absolute; bottom: 0; width: 100%; background: rgba(44, 62, 80, 0.8); color: #FFF; text-align: center; font-size: 0.9em; padding: 5px 0; font-weight: bold; }
-
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; animation: fadeIn 0.3s;
-        }
-        .modal-content {
-            background: #FFF; padding: 15px; border-radius: 10px; max-width: 90%; max-height: 90%; position: relative; text-align: center; border: 4px solid var(--secondary-color);
-        }
-        .modal-img { max-width: 100%; max-height: 80vh; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.2);}
-        .modal-close {
-            position: absolute; top: -20px; right: -20px; background: var(--wrong-color); color: white; border: 2px solid white; width: 40px; height: 40px; border-radius: 50%; font-size: 1.5em; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-        }
-
-        .question-box { 
-            background-color: #FFF; border-left: 8px solid var(--primary-color); border-right: 1px solid #CCC; border-top: 1px solid #CCC; border-bottom: 1px solid #CCC;
-            padding: 20px; margin-bottom: 20px; border-radius: 5px; box-shadow: 3px 3px 10px rgba(0,0,0,0.1);
-        }
-        .question-text { font-size: 1.8em; font-weight: 600; line-height: 1.6; color: #333; }
-        .question-img { max-width: 100%; max-height: 250px; width: auto; object-fit: contain; display: block; margin: 15px auto; border: 5px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-radius: 5px; background: #eee; }
+        /* --- 瀑布流刷題模式 (Waterfall) --- */
+        .waterfall-container { position: relative; height: 100%; }
         
-        .option-btn { 
-            width: 100%; padding: 15px; margin: 10px 0; text-align: left; background: white; border: 2px solid #bdc3c7; border-radius: 10px; 
-            cursor: pointer; transition: 0.2s; font-size: 1.5em; line-height: 1.4; font-family: inherit; position: relative; color: #444;
+        /* Sticky Header */
+        .waterfall-header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(255, 255, 255, 0.98);
+            border-bottom: 3px solid var(--primary-color);
+            padding: 10px; margin: -25px -25px 20px -25px; /* 抵消 container padding */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .option-btn:hover { background-color: #ecf0f1; border-color: var(--primary-color); }
-        .correct { background-color: #d4edda !important; border-color: var(--correct-color) !important; color: #155724; font-weight:bold; }
-        .wrong { background-color: #f8d7da !important; border-color: var(--wrong-color) !important; color: #721c24; }
-
-        .progress-container { width: 100%; background-color: #bdc3c7; border-radius: 10px; margin: 15px 0; height: 20px; overflow: hidden; }
-        .progress-bar { height: 100%; background-color: var(--primary-color); width: 0%; transition: width 0.3s ease; }
-
-        .explanation-box, .review-item {
-            margin-top: 20px; padding: 20px; background-color: #eaf2f8; border: 2px dashed #2980b9; border-radius: 10px; color: #2c3e50; font-size: 1.3em; text-align: left; line-height: 1.6;
-        }
-        .review-list { list-style: none; padding: 0; }
-        .review-item { margin-bottom: 25px; background: white; border: 1px solid #ccc; border-left: 5px solid #aaa; }
+        .wf-title { font-size: 1.4em; font-weight: bold; color: var(--primary-color); margin-left: 15px;}
+        .wf-score-board { font-size: 1.2em; font-weight: bold; margin-right: 15px; color: var(--correct-color); background: #ebf5eb; padding: 5px 15px; border-radius: 20px;}
         
-        /* 🟢 新增與修正：標籤樣式優化 */
-        .tag { padding: 4px 10px; border-radius: 5px; font-size: 0.9em; color: white; margin-right: 8px; vertical-align: middle; display:inline-block; font-weight:bold;}
-        .tag-correct { background-color: var(--correct-color); }
-        .tag-wrong { background-color: var(--wrong-color); }
-        
-        /* 🟢 新增：錯題色塊樣式 */
-        .ans-tag { padding: 3px 8px; border-radius: 4px; font-weight: bold; margin: 0 5px; display: inline-block; }
-        .ans-tag.is-correct { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .ans-tag.is-wrong { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .wf-progress-bg { position: absolute; bottom: 0; left: 0; width: 100%; height: 5px; background: #eee; }
+        .wf-progress-fill { height: 100%; background: var(--correct-color); width: 0%; transition: 0.3s; }
 
-        #history-list { list-style: none; padding: 0; }
-        #history-list li { 
-            background: white; margin: 15px 0; padding: 20px; border-radius: 10px; border: 1px solid #bdc3c7; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; font-size: 1.2em; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        /* 題目卡片 */
+        .wf-card {
+            background: #FFF; border: 2px solid #e0e0e0; border-radius: 10px;
+            padding: 20px; margin-bottom: 25px; position: relative;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.05); transition: 0.3s;
         }
-        .quiz-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px; border-bottom: 2px solid #bdc3c7; padding-bottom: 10px; }
-        .header-controls { display: flex; align-items: center; gap: 8px; }
+        .wf-card.answered-correct { border-color: var(--correct-color); background-color: #f0fff4; }
+        .wf-card.answered-wrong { border-color: var(--wrong-color); background-color: #fff5f5; }
+        
+        /* 卡片工具列 */
+        .wf-card-tools { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; }
+        .wf-tool-btn { font-size: 1.5em; cursor: pointer; transition: 0.2s; background: none; border: none; padding: 0; }
+        .wf-tool-btn:hover { transform: scale(1.2); }
+        .wf-delete-btn { color: #bdc3c7; display: none; } /* 預設隱藏 */
+        .wf-delete-btn:hover { color: var(--wrong-color); }
+        
+        .wf-q-text { font-size: 1.4em; font-weight: bold; color: #2c3e50; margin-bottom: 15px; line-height: 1.5; padding-right: 60px; }
+        .wf-img { max-width: 100%; max-height: 200px; display: block; margin: 10px auto; border-radius: 5px; border: 1px solid #ddd; }
+        
+        .wf-options { list-style: none; padding: 0; }
+        .wf-option-btn {
+            width: 100%; padding: 12px 15px; margin: 5px 0; text-align: left;
+            background: #FFF; border: 2px solid #bdc3c7; border-radius: 8px;
+            cursor: pointer; font-size: 1.2em; font-family: inherit; transition: 0.2s;
+            position: relative;
+        }
+        .wf-option-btn:hover:not(:disabled) { border-color: var(--primary-color); background: #fbfbfb; }
+        .wf-option-btn:disabled { cursor: default; opacity: 1; }
+        
+        /* 狀態樣式 */
+        .wf-option-btn.correct { background-color: #d4edda; border-color: var(--correct-color); color: #155724; font-weight: bold; }
+        .wf-option-btn.wrong { background-color: #f8d7da; border-color: var(--wrong-color); color: #721c24; }
+        .wf-option-btn.missed { border-color: var(--correct-color); color: var(--correct-color); border-style: dashed; }
+
+        .wf-explanation {
+            margin-top: 15px; padding: 15px; background: #eaf2f8; 
+            border-left: 5px solid #2980b9; border-radius: 5px; 
+            display: none; animation: fadeIn 0.3s; line-height: 1.6; font-size: 1.1em;
+        }
+
+        /* --- 傳統模式 (Standard) --- */
+        .standard-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+        .progress-bar-container { width: 100%; height: 10px; background: #eee; border-radius: 5px; overflow: hidden; margin-top: 5px; }
+        .progress-bar-fill { height: 100%; background: var(--primary-color); width: 0%; transition: 0.3s; }
+        .standard-q-box { background: white; padding: 20px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 20px; box-shadow: 0 4px 0 rgba(0,0,0,0.05); }
+
+        /* --- 其他 --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; justify-content: center; align-items: center; }
+        .modal-content { background: #FFF; padding: 20px; border-radius: 10px; max-width: 90%; max-height: 90%; text-align: center; border: 4px solid var(--primary-color); }
+        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; }
+        .card-item { aspect-ratio: 2/3; background: #ddd; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .card-item img { width: 100%; height: 100%; object-fit: cover; }
+        .card-item.locked { filter: grayscale(1); opacity: 0.7; cursor: default; position: relative; }
+        
+        .empty-state { text-align: center; padding: 40px; color: #7f8c8d; font-size: 1.2em; }
     </style>
 </head>
 <body>
-    <div class="quiz-container">
-        <audio id="bgm-player"></audio>
-        <div id="welcome-screen" class="fade-in">
-            <h1>國文：張釋之執法 選擇題大挑戰</h1>
-            <div style="font-size: 5em; margin: 30px; text-align:center;">⚖️📜🏛️🙇</div>
-            <p style="font-size: 1.5em; text-align: center; color: #2c3e50;">請輸入大名，準備進入漢代廷尉府！</p>
-            <div style="text-align:center;"><input type="text" id="username" placeholder="請輸入閣下尊姓大名..." /></div>
-            <div class="avatar-selection">
-                <img src="images/avatar_boy1.png" class="avatar-option selected" onclick="selectAvatar('avatar_boy1.png', this)">
-                <img src="images/avatar_boy2.png" class="avatar-option" onclick="selectAvatar('avatar_boy2.png', this)">
-                <img src="images/avatar_girl1.png" class="avatar-option" onclick="selectAvatar('avatar_girl1.png', this)">
-                <img src="images/avatar_girl2.png" class="avatar-option" onclick="selectAvatar('avatar_girl2.png', this)">
-            </div>
-            <div id="quick-login-area" class="quick-login-area"></div>
-            <br><br>
-            <div style="text-align:center;"><button class="btn" onclick="loginAndStart()">📜 擊鼓鳴冤 (開始)</button></div>
+
+<div class="quiz-container">
+    <audio id="bgm-player"></audio>
+
+    <!-- 1. 歡迎畫面 -->
+    <div id="welcome-screen" class="fade-in">
+        <h1>國文：張釋之執法 選擇題大挑戰</h1>
+        <div style="font-size: 4em; margin: 20px; text-align:center;">⚖️📜🏛️</div>
+        <p style="text-align: center; color: #2c3e50;">請輸入大名，準備進入漢代廷尉府！</p>
+        
+        <div style="text-align:center;">
+            <input type="text" id="username" placeholder="閣下尊姓大名..." />
         </div>
-        <div id="level-screen" style="display: none; text-align: center;" class="fade-in">
-            <div style="background: rgba(255,255,255,0.9); padding:10px 20px; border-radius:10px; display:inline-block; margin-bottom:10px; border: 2px solid #2c3e50;">
-                <h2 style="margin:0; color: #2c3e50;">🗺️ 廷尉府審判地圖</h2>
-                <p style="font-size: 1.2em; margin:5px; color: #34495e;">
-                    <img id="user-avatar-display" src="" style="width:30px; vertical-align:middle; border-radius:50%; border:1px solid #555;">
-                    廷尉：<span id="display-name" style="color:#c0392b; font-weight:bold;"></span>
-                </p>
-            </div>
-            <div id="level-map" class="level-map-container"></div>
-            <div style="margin-top: 20px; background: rgba(255,255,255,0.9); padding:15px; border-radius:15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; border: 1px solid #bdc3c7;">
-                <button id="btn-mistake" class="btn btn-red" onclick="startQuiz('mistake')" style="display:none;">📕 案件重審 (<span id="mistake-count">0</span>)</button>
-                <button id="btn-favorite" class="btn btn-pink" onclick="startQuiz('favorite')" style="display:none;">💖 刑律收藏 (<span id="favorite-count">0</span>)</button>
-                <button class="btn btn-blue" onclick="showCollection()">🎴 執法圖鑑</button>
-                <button class="btn btn-green" onclick="showHistory()">📜 審判紀錄</button>
-                <div style="display:inline-flex; gap:5px; align-items:center; background:#ecf0f1; padding:5px; border-radius:30px;">
-                    <button id="btn-music-main" class="btn btn-sm btn-music" onclick="toggleMusic()" title="奏樂/靜音">🎵</button>
-                    <button class="btn btn-sm btn-music" onclick="nextTrack()" title="換曲">⏭️</button>
-                </div>
-                <button class="btn btn-gray" onclick="logout()">🚪 退堂 (登出)</button>
-            </div>
+        
+        <div class="avatar-selection">
+            <img src="images/avatar_boy1.png" class="avatar-option selected" onclick="selectAvatar('avatar_boy1.png', this)">
+            <img src="images/avatar_boy2.png" class="avatar-option" onclick="selectAvatar('avatar_boy2.png', this)">
+            <img src="images/avatar_girl1.png" class="avatar-option" onclick="selectAvatar('avatar_girl1.png', this)">
+            <img src="images/avatar_girl2.png" class="avatar-option" onclick="selectAvatar('avatar_girl2.png', this)">
         </div>
-        <div id="quiz-content" style="display: none;" class="fade-in">
-            <div class="quiz-header">
-                <h3 id="level-title" style="margin:0; font-size: 1.5em; color: #2c3e50;">第 X 回</h3>
-                <div class="header-controls">
-                    <button id="btn-toggle-favorite" class="btn btn-sm" style="background-color:#FFF; border:2px solid #E91E63; color:#E91E63; font-size:1.2em;" onclick="toggleFavorite()" title="收藏/取消">🤍</button>
-                    <button id="btn-music-quiz" class="btn btn-sm btn-music" style="margin:0;" onclick="toggleMusic()" title="奏樂/靜音">🎵</button>
-                    <button class="btn btn-sm btn-music" style="margin:0;" onclick="nextTrack()" title="換曲">⏭️</button>
-                    <button class="btn btn-gray btn-sm" style="margin:0;" onclick="exitQuiz()">🏠 返回地圖</button>
+
+        <div id="quick-login-area" class="quick-login-area" style="text-align: center;"></div>
+        
+        <div style="text-align:center; margin-top: 30px;">
+            <button class="btn" onclick="loginAndStart()">📜 擊鼓鳴冤 (進入)</button>
+        </div>
+    </div>
+
+    <!-- 2. 儀表板 (Dashboard) -->
+    <div id="dashboard-screen" style="display: none;" class="fade-in">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #bdc3c7;">
+            <div style="display:flex; align-items:center; gap: 10px;">
+                <img id="dash-avatar" src="" style="width:50px; height:50px; border-radius:50%; border:2px solid var(--primary-color);">
+                <div>
+                    <div style="font-size: 0.9em; color: #7f8c8d;">廷尉</div>
+                    <div id="dash-name" style="font-size: 1.5em; font-weight: bold; color: var(--primary-color);"></div>
                 </div>
             </div>
-            <div class="progress-container"><div id="progress-bar" class="progress-bar"></div></div>
-            <div style="text-align: right; font-size: 1.1em; color: #34495e; font-weight: bold;">卷宗: <span id="current-q-num">1</span> / <span id="total-q-num">20</span></div>
-            <div id="question-container" class="fade-in">
-                <div class="question-box">
-                    <div id="question-text" class="question-text">載入中...</div>
-                    <img id="question-image" class="question-img" style="display: none;" />
+            <div>
+                 <button id="btn-music-dash" class="btn btn-sm btn-music" onclick="toggleMusic()">🎵</button>
+                 <button class="btn btn-sm btn-gray" onclick="logout()">🚪 退堂</button>
+            </div>
+        </div>
+
+        <div class="dashboard-layout">
+            <!-- 左側：標準闖關 -->
+            <div class="dashboard-left">
+                <h2 style="text-align: left; margin-bottom: 15px;">🧪 標準闖關 <small style="font-size:0.5em; color:#7f8c8d;">(70分及格)</small></h2>
+                <div id="standard-resume-area" style="display:none; margin-bottom: 15px; background: #e8f6f3; padding: 10px; border-radius: 8px; border: 1px solid var(--correct-color); text-align: center;">
+                    <span style="color: var(--correct-color); font-weight: bold;">📝 發現未完成的卷宗！</span>
+                    <button class="btn btn-sm btn-green" onclick="resumeStandardQuiz()">↪️ 繼續上次的闖關</button>
                 </div>
-                <ul id="options-list" style="list-style: none; padding: 0;"></ul>
+                <div id="level-grid" class="level-grid">
+                    <!-- JS 生成關卡 -->
+                </div>
             </div>
-            <div id="explanation" class="explanation-box" style="display: none;"><strong>💡 判決解析：</strong> <span id="explanation-text"></span></div>
-            <button id="next-btn" class="btn" style="display: none; width: 100%; margin-top: 25px;" onclick="nextQuestion()">下一題 ➡️</button>
-        </div>
-        <div id="score-box" style="display: none; text-align: center;" class="fade-in">
-            <h2 style="color: #2c3e50;">🎉 審判完成！</h2>
-            <p style="font-size: 2em; margin: 10px 0; font-weight: bold; color: #34495e;">廷尉：<span id="final-name"></span></p>
-            <p style="font-size: 4em; margin: 10px 0; font-weight: bold; color: #c0392b; font-family: 'Times New Roman', serif;"><span id="final-score"></span> 分</p>
-            <div id="score-comment" style="font-size: 1.5em; margin-bottom: 25px; color: #e67e22;"></div>
-            <div id="unlock-msg" style="color: var(--correct-color); font-weight: bold; display:none; margin-bottom: 15px; font-size: 1.5em;">🔓 下一回審判已開啟！</div>
-            <div id="new-card-alert" style="display:none; background:#ecf0f1; border:2px solid var(--secondary-color); border-radius:15px; padding:10px; margin: 10px 0;">
-                 <h3 style="margin:5px; color: #d35400;">✨ 獲得新證物/圖鑑！ ✨</h3>
-                 <p style="font-size: 1.2em;">快去「圖鑑」查看！</p>
-            </div>
-            <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
-                <button class="btn" onclick="goToLevelScreen()">🗺️ 返回地圖</button>
-                <button class="btn btn-green" onclick="toggleReview()">📝 查看詳解</button>
-            </div>
-            <div id="full-review-area" style="display: none; margin-top: 40px;">
-                <h3>🔍 卷宗回顧</h3>
-                <ul id="review-list" class="review-list"></ul>
-                <button class="btn" onclick="goToLevelScreen()">🗺️ 返回地圖</button>
-            </div>
-        </div>
-        <div id="history-screen" style="display: none;" class="fade-in">
-            <h2>📜 歷代廷尉榜 (紀錄)</h2>
-            <ul id="history-list"></ul>
-            <div style="margin-top: 30px; text-align: center;"><button class="btn" onclick="goToLevelScreen()">🗺️ 返回地圖</button></div>
-        </div>
-        <div id="history-detail-screen" style="display: none;" class="fade-in">
-            <h3>📜 歷史卷宗回顧</h3>
-            <p style="font-size: 1.2em;">時間：<span id="history-date"></span> | 成績：<span id="history-score"></span></p>
-            <ul id="history-review-list" class="review-list"></ul>
-            <div style="text-align:center;"><button class="btn" onclick="showHistory()">⬅️ 返回列表</button></div>
-        </div>
-        <div id="collection-screen" style="display: none;" class="fade-in">
-            <h2>🎴 執法圖鑑</h2>
-            <p style="text-align:center; color:#34495e; font-size: 1.2em;">審判達 80 分即可獲贈該回證物！</p>
-            <div id="collection-grid" class="collection-grid"></div>
-            <div style="text-align:center; margin-top:20px;"><button class="btn" onclick="goToLevelScreen()">🗺️ 返回地圖</button></div>
-        </div>
-        <div id="card-modal" class="modal-overlay" onclick="closeCardModal()">
-            <div class="modal-content" onclick="event.stopPropagation()">
-                <button class="modal-close" onclick="closeCardModal()">×</button>
-                <img id="modal-img" class="modal-img" src="">
-                <h3 id="modal-title" style="margin-top:10px; color: #2c3e50;"></h3>
+
+            <!-- 右側：極速刷題與工具 -->
+            <div class="dashboard-right">
+                <!-- 刷題區 -->
+                <div class="panel-box purple-theme">
+                    <h3 style="color: var(--speed-color);">⚡ 極速刷題區</h3>
+                    <p style="font-size: 0.9em; color: #666; margin: 5px 0;">全範圍題目，一滑到底！</p>
+                    <button class="btn btn-purple" style="width: 100%; margin: 10px 0 5px 0;" onclick="initWaterfallMode('speed')">🚀 開始刷題 (全範圍)</button>
+                </div>
+
+                <!-- 工具區 -->
+                <div class="panel-box">
+                    <h3>📂 卷宗管理</h3>
+                    <div class="stat-row">
+                        <span>📕 錯題本</span>
+                        <span id="dash-mistake-count" style="font-weight:bold; color:var(--wrong-color);">0</span>
+                    </div>
+                    <button class="btn btn-red btn-sm" style="width:100%;" onclick="initWaterfallMode('mistake')">複習錯題</button>
+                    
+                    <div class="stat-row" style="margin-top: 15px;">
+                        <span>💖 收藏夾</span>
+                        <span id="dash-fav-count" style="font-weight:bold; color:var(--favorite-color);">0</span>
+                    </div>
+                    <button class="btn btn-pink btn-sm" style="width:100%;" onclick="initWaterfallMode('favorite')">查看收藏</button>
+                </div>
+
+                <div class="panel-box">
+                    <h3>🏆 成就</h3>
+                    <button class="btn btn-blue btn-sm" style="width:100%; margin-bottom: 5px;" onclick="showCollection()">🎴 執法圖鑑</button>
+                    <button class="btn btn-green btn-sm" style="width:100%;" onclick="showHistory()">📜 審判紀錄</button>
+                </div>
             </div>
         </div>
     </div>
-    <script>
-        // 🟢 關卡設定：170題，前8關各20題，第9關10題
-        const LEVEL_CONFIG = [20, 20, 20, 20, 20, 20, 20, 20, 10]; 
-        const ITEMS_PER_ROW = 3; 
-        const PLAYLIST = ['sounds/bgm1.mp3', 'sounds/bgm2.mp3', 'sounds/bgm3.mp3'];
-        const APP_PREFIX = 'zhang_'; 
 
-        let currentTrackIndex = 0; let isPlaying = false;
-        let allQuestions = [], currentQuizQuestions = [], currentQuestionIndex = 0, score = 0;
-        let userName = "", currentLevel = 1, userAnswers = {}, isMistakeMode = false, isFavoriteMode = false;
-        let currentAvatar = "avatar_boy1.png"; 
-        let audioCorrect = new Audio('sounds/correct.mp3'); audioCorrect.volume = 0.4;
-        let audioFail = new Audio('sounds/fail.mp3'); audioFail.volume = 0.4;
-        const bgmPlayer = document.getElementById('bgm-player');
-        bgmPlayer.volume = 0.3; bgmPlayer.onended = nextTrack;
+    <!-- 3. 標準闖關模式 (Standard Quiz) -->
+    <div id="quiz-content" style="display: none;" class="fade-in">
+        <div class="standard-header">
+            <div>
+                <h3 id="std-level-title" style="margin:0;">第 X 回</h3>
+                <div class="progress-bar-container"><div id="std-progress-bar" class="progress-bar-fill"></div></div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.9em; color: #7f8c8d;">卷宗</div>
+                <div style="font-size: 1.2em; font-weight: bold;"><span id="std-current">1</span> / <span id="std-total">20</span></div>
+            </div>
+            <div style="margin-left: 10px;">
+                <button class="btn btn-sm btn-pink" id="std-fav-btn" onclick="toggleFavoriteStandard()">🤍</button>
+                <button class="btn btn-sm btn-gray" onclick="pauseStandardQuiz()">🏠 暫離</button>
+            </div>
+        </div>
 
-        function playMusic() { if(PLAYLIST.length===0)return; bgmPlayer.src = PLAYLIST[currentTrackIndex]; bgmPlayer.play().then(() => { isPlaying = true; updateMusicButtons(); }).catch(e=>console.log("Auto-play blocked")); }
-        function toggleMusic() { if (bgmPlayer.paused) { if(!bgmPlayer.src) bgmPlayer.src=PLAYLIST[currentTrackIndex]; bgmPlayer.play(); isPlaying = true; } else { bgmPlayer.pause(); isPlaying = false; } updateMusicButtons(); }
-        function nextTrack() { currentTrackIndex = (currentTrackIndex + 1) % PLAYLIST.length; playMusic(); }
-        function updateMusicButtons() { const btns = [document.getElementById('btn-music-main'), document.getElementById('btn-music-quiz')]; btns.forEach(btn => { if(btn) { if (isPlaying) { btn.classList.add('playing'); btn.style.opacity = '1'; } else { btn.classList.remove('playing'); btn.style.opacity = '0.7'; } } }); }
+        <div class="standard-q-box">
+            <div id="std-question-text" style="font-size: 1.5em; font-weight: bold; margin-bottom: 15px;"></div>
+            <img id="std-question-img" style="display: none; max-width: 100%; max-height: 250px; margin: 0 auto 15px auto;">
+            <div id="std-options-area"></div>
+        </div>
 
-        fetch('questions.json').then(res => res.json()).then(data => { allQuestions = data; renderQuickLogin(); }).catch(e => console.error(e));
+        <div id="std-explanation" class="wf-explanation" style="margin-bottom: 20px;"></div>
+        <button id="std-next-btn" class="btn" style="width: 100%; display: none;" onclick="nextStandardQuestion()">下一題 ➡️</button>
+    </div>
 
-        function getUserKey(key) { return APP_PREFIX + userName + '_' + key; }
-        function selectAvatar(filename, element) { currentAvatar = filename; document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected')); element.classList.add('selected'); }
-        function getSavedUsers() { return JSON.parse(localStorage.getItem(APP_PREFIX + 'savedUsers')) || []; }
-        function renderQuickLogin() {
-            let users = getSavedUsers(); let container = document.getElementById('quick-login-area'); container.innerHTML = "";
-            if(users.length > 0) { container.innerHTML = '<div style="width:100%; text-align:center; color:#2c3e50; font-size:0.9em; margin-bottom:5px;">-- 舊雨重逢 (快速登入) --</div>'; users.forEach(userObj => { let name = typeof userObj === 'string' ? userObj : userObj.name; let avatar = typeof userObj === 'string' ? 'avatar_boy1.png' : userObj.avatar; let div = document.createElement('div'); div.innerHTML = `<span class="user-tag" onclick="quickLogin('${name}', '${avatar}')"><img src="images/${avatar}" style="width:25px; height:25px; border-radius:50%; margin-right:5px; border:1px solid #2c3e50;">${name}<span class="delete-user" onclick="event.stopPropagation(); deleteUser('${name}')">×</span></span>`; container.appendChild(div); }); }
-        }
-        function quickLogin(name, avatar) { document.getElementById('username').value = name; currentAvatar = avatar; document.querySelectorAll('.avatar-option').forEach(el => { if(el.getAttribute('onclick').includes(avatar)) el.classList.add('selected'); else el.classList.remove('selected'); }); loginAndStart(); }
-        function deleteUser(name) { if (!confirm(`確定要刪除「${name}」的所有功名資料嗎？`)) return; localStorage.removeItem(APP_PREFIX + name + '_mistakeBank'); localStorage.removeItem(APP_PREFIX + name + '_favoriteBank'); localStorage.removeItem(APP_PREFIX + name + '_quizHistory'); localStorage.removeItem(APP_PREFIX + name + '_quizProgress'); let users = getSavedUsers(); users = users.filter(u => (typeof u === 'string' ? u : u.name) !== name); localStorage.setItem(APP_PREFIX + 'savedUsers', JSON.stringify(users)); renderQuickLogin(); }
-        function loginAndStart() { const inputName = document.getElementById('username').value.trim(); if (!inputName) { alert("請留下大名！"); return; } userName = inputName; localStorage.setItem(APP_PREFIX + 'quizUserName', userName); localStorage.setItem(APP_PREFIX + 'quizUserAvatar', currentAvatar); let users = getSavedUsers(); users = users.filter(u => (typeof u === 'string' ? u : u.name) !== userName); users.push({ name: userName, avatar: currentAvatar }); localStorage.setItem(APP_PREFIX + 'savedUsers', JSON.stringify(users)); if (!isPlaying) playMusic(); goToLevelScreen(); }
-        function getProgress() { return JSON.parse(localStorage.getItem(getUserKey('quizProgress'))) || { maxLevel: 1, levelScores: {} }; }
-        function saveProgress(level, score) { let progress = getProgress(); if (!progress.levelScores[level] || score > progress.levelScores[level]) progress.levelScores[level] = score; if (score >= 80 && level === progress.maxLevel && level < LEVEL_CONFIG.length) progress.maxLevel++; localStorage.setItem(getUserKey('quizProgress'), JSON.stringify(progress)); }
-        function goToLevelScreen() { document.getElementById('display-name').innerText = userName; document.getElementById('user-avatar-display').src = "images/" + currentAvatar; document.querySelectorAll('.quiz-container > div').forEach(el => el.style.display = 'none'); document.getElementById('level-screen').style.display = 'block'; renderLevelMap(); updateMistakeButton(); updateFavoriteButton(); updateMusicButtons(); }
-        function renderLevelMap() {
-            const container = document.getElementById('level-map'); container.innerHTML = ""; const progress = getProgress(); let rows = []; for (let i = 0; i < LEVEL_CONFIG.length; i += ITEMS_PER_ROW) rows.push(LEVEL_CONFIG.slice(i, i + ITEMS_PER_ROW));
-            rows.forEach((rowItems, rowIndex) => { let rowDiv = document.createElement('div'); rowDiv.className = 'level-row'; let isReverse = (rowIndex % 2 !== 0); if (isReverse) rowDiv.classList.add('reverse'); let startLevelNum = rowIndex * ITEMS_PER_ROW + 1;
-                rowItems.forEach((_, itemIndex) => { let levelNum = startLevelNum + itemIndex; let wrapper = document.createElement('div'); wrapper.className = 'level-wrapper'; let btn = document.createElement('button'); btn.className = 'level-btn';
-                    if (levelNum <= progress.maxLevel) { let bestScore = progress.levelScores[levelNum]; let icon = bestScore >= 80 ? '🚩' : '🏳️'; if (bestScore === 100) icon = '👑'; else if (bestScore >= 90) icon = '⭐'; let scoreText = bestScore !== undefined ? `<div class="level-score">${bestScore}分</div>` : '<div class="level-score">出發</div>'; btn.innerHTML = `<div class="level-title">${icon} 第${levelNum}回</div>${scoreText}`; btn.onclick = () => startQuiz('level', levelNum); if (levelNum === progress.maxLevel) { let avatarImg = document.createElement('img'); avatarImg.src = "images/" + currentAvatar; avatarImg.className = "map-avatar"; wrapper.appendChild(avatarImg); } } else { btn.disabled = true; btn.innerHTML = `<div class="level-title">🔒 第${levelNum}回</div><div class="level-score" style="color:gray">待解</div>`; }
-                    wrapper.appendChild(btn); if (itemIndex < rowItems.length - 1) { let arrow = document.createElement('div'); arrow.className = 'arrow-icon'; if (isReverse) { arrow.innerHTML = '➜'; arrow.classList.add('arrow-left'); } else { arrow.innerText = '➜'; arrow.classList.add('arrow-right'); } wrapper.appendChild(arrow); } rowDiv.appendChild(wrapper);
-                }); container.appendChild(rowDiv); if (rowIndex < rows.length - 1) { let connectorDiv = document.createElement('div'); connectorDiv.className = 'row-connector'; let downArrow = document.createElement('div'); downArrow.className = 'arrow-icon arrow-down'; downArrow.innerText = '⬇'; if (isReverse) connectorDiv.classList.add('left'); connectorDiv.appendChild(downArrow); container.appendChild(connectorDiv); }
+    <!-- 4. 瀑布流刷題模式 (Waterfall Mode) -->
+    <div id="waterfall-screen" style="display: none; height: 100%;" class="fade-in">
+        <div class="waterfall-header">
+            <div style="display:flex; align-items:center;">
+                <button class="btn btn-sm btn-gray" onclick="exitWaterfallMode()">🏠 返回</button>
+                <span id="wf-mode-title" class="wf-title">極速刷題</span>
+            </div>
+            <div id="wf-score-display" class="wf-score-board">答對: 0</div>
+            <div class="wf-progress-bg"><div id="wf-progress-bar" class="wf-progress-fill"></div></div>
+        </div>
+
+        <div id="waterfall-list" style="padding-bottom: 50px;">
+            <!-- JS 生成卡片 -->
+        </div>
+    </div>
+
+    <!-- 5. 結算畫面 -->
+    <div id="score-box" style="display: none; text-align: center;" class="fade-in">
+        <h2 style="color: #2c3e50;">🎉 審判完成！</h2>
+        <p style="font-size: 4em; margin: 10px 0; font-weight: bold; color: #c0392b; font-family: 'Times New Roman', serif;"><span id="final-score"></span> 分</p>
+        <div id="score-comment" style="font-size: 1.5em; margin-bottom: 25px; color: #e67e22;"></div>
+        <div id="unlock-msg" style="color: var(--correct-color); font-weight: bold; display:none; margin-bottom: 15px; font-size: 1.5em;">🔓 下一回審判已開啟！</div>
+        
+        <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+            <button class="btn" onclick="returnToDash()">🗺️ 返回儀表板</button>
+        </div>
+    </div>
+
+    <!-- 6. 附屬畫面 (紀錄、圖鑑) -->
+    <div id="history-screen" style="display: none;" class="fade-in">
+        <h2>📜 歷代廷尉榜</h2>
+        <ul id="history-list" style="list-style: none; padding: 0;"></ul>
+        <div style="text-align: center; margin-top: 20px;"><button class="btn" onclick="returnToDash()">🗺️ 返回</button></div>
+    </div>
+
+    <div id="collection-screen" style="display: none;" class="fade-in">
+        <h2>🎴 執法圖鑑</h2>
+        <div id="collection-grid" class="collection-grid"></div>
+        <div style="text-align: center; margin-top: 20px;"><button class="btn" onclick="returnToDash()">🗺️ 返回</button></div>
+    </div>
+
+    <!-- 彈窗 -->
+    <div id="card-modal" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="btn btn-sm btn-red" style="position:absolute; top:-15px; right:-15px; border-radius:50%; width:30px; height:30px; padding:0;" onclick="closeModal()">×</button>
+            <img id="modal-img" src="" style="max-width:100%; max-height:70vh;">
+            <h3 id="modal-title" style="margin-top:10px;"></h3>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- Config & State ---
+    const LEVEL_CONFIG = [20, 20, 20, 20, 20, 20, 20, 20, 10]; // 170題
+    const PASS_SCORE = 70;
+    const APP_PREFIX = 'zhang_';
+    const PLAYLIST = ['sounds/bgm1.mp3', 'sounds/bgm2.mp3', 'sounds/bgm3.mp3'];
+
+    let allQuestions = [];
+    let userName = "";
+    let currentAvatar = "avatar_boy1.png";
+    let bgmPlayer = document.getElementById('bgm-player');
+    let currentTrack = 0;
+    let isPlaying = false;
+
+    // 音效
+    let audioCorrect = new Audio('sounds/correct.mp3'); 
+    let audioFail = new Audio('sounds/fail.mp3');
+    bgmPlayer.volume = 0.3; bgmPlayer.onended = () => { currentTrack = (currentTrack + 1) % PLAYLIST.length; playMusic(); };
+
+    // --- Init ---
+    fetch('questions.json')
+        .then(res => res.json())
+        .then(data => { 
+            allQuestions = data; 
+            renderQuickLogin(); 
+        })
+        .catch(e => {
+            console.error(e);
+            alert("題目載入失敗，請確認 questions.json 存在");
+        });
+
+    // --- Helpers ---
+    const getKey = (key) => `${APP_PREFIX}${userName}_${key}`;
+    const getLetter = (str) => { let m = str && str.match(/[A-Za-z]/); return m ? m[0].toUpperCase() : ""; };
+    const getStorage = (key, def) => { let v = localStorage.getItem(key); return v ? JSON.parse(v) : def; };
+    const setStorage = (key, val) => localStorage.setItem(key, JSON.stringify(val));
+
+    // --- Music ---
+    function playMusic() { if(!PLAYLIST.length) return; bgmPlayer.src = PLAYLIST[currentTrack]; bgmPlayer.play().then(()=>{isPlaying=true; updateMusicBtns();}).catch(()=>{}); }
+    function toggleMusic() { if(bgmPlayer.paused) { if(!bgmPlayer.src) bgmPlayer.src=PLAYLIST[currentTrack]; bgmPlayer.play(); isPlaying=true; } else { bgmPlayer.pause(); isPlaying=false; } updateMusicBtns(); }
+    function updateMusicBtns() { 
+        document.querySelectorAll('.btn-music').forEach(b => {
+            b.classList.toggle('playing', isPlaying);
+            b.style.opacity = isPlaying ? '1' : '0.7';
+        });
+    }
+
+    // --- Login ---
+    function selectAvatar(img, el) { 
+        currentAvatar = img; 
+        document.querySelectorAll('.avatar-option').forEach(x => x.classList.remove('selected'));
+        el.classList.add('selected');
+    }
+    function renderQuickLogin() {
+        let users = getStorage(APP_PREFIX + 'savedUsers', []);
+        let area = document.getElementById('quick-login-area');
+        area.innerHTML = '';
+        if(users.length) {
+            area.innerHTML = '<div style="font-size:0.9em; color:#7f8c8d; margin-bottom:5px;">-- 快速登入 --</div>';
+            users.forEach(u => {
+                let d = document.createElement('div'); d.className = 'user-tag';
+                d.innerHTML = `<img src="images/${u.avatar}" style="width:20px; border-radius:50%; margin-right:5px;">${u.name}`;
+                d.onclick = () => { document.getElementById('username').value = u.name; currentAvatar = u.avatar; loginAndStart(); };
+                area.appendChild(d);
             });
         }
-        function logout() { location.reload(); }
-        function exitQuiz() { if(confirm("確定要放棄目前的進度，返回地圖嗎？")) goToLevelScreen(); }
-        function startQuiz(mode, levelNum) {
-            isMistakeMode = (mode === 'mistake'); isFavoriteMode = (mode === 'favorite'); userAnswers = {}; score = 0; currentQuestionIndex = 0;
-            if (isMistakeMode) { let mistakeIds = JSON.parse(localStorage.getItem(getUserKey('mistakeBank'))) || []; currentQuizQuestions = allQuestions.filter(q => mistakeIds.includes(q.id)); document.getElementById('level-title').innerText = "📕 案件重審"; } else if (isFavoriteMode) { let favIds = JSON.parse(localStorage.getItem(getUserKey('favoriteBank'))) || []; currentQuizQuestions = allQuestions.filter(q => favIds.includes(q.id)); document.getElementById('level-title').innerText = "💖 刑律收藏"; } else { currentLevel = levelNum; let startIndex = 0; for (let i = 0; i < levelNum - 1; i++) { startIndex += LEVEL_CONFIG[i]; } let endIndex = startIndex + LEVEL_CONFIG[levelNum - 1]; if (allQuestions.length < endIndex) { alert(`題目卷宗整理中，請稍後再試。`); return; } currentQuizQuestions = allQuestions.slice(startIndex, endIndex); document.getElementById('level-title').innerText = `🚩 第 ${levelNum} 回`; }
-            if (currentQuizQuestions.length === 0) { alert("目前無題目可考！"); return; } document.getElementById('level-screen').style.display = 'none'; document.getElementById('quiz-content').style.display = 'block'; document.getElementById('total-q-num').innerText = currentQuizQuestions.length; updateMusicButtons(); loadQuestion();
-        }
-        function loadQuestion() {
-            const currentQuestion = currentQuizQuestions[currentQuestionIndex]; let qContainer = document.getElementById('question-container'); qContainer.classList.remove('fade-in'); void qContainer.offsetWidth; qContainer.classList.add('fade-in');
-            let progress = ((currentQuestionIndex) / currentQuizQuestions.length) * 100; document.getElementById('progress-bar').style.width = progress + "%"; document.getElementById('current-q-num').innerText = currentQuestionIndex + 1; document.getElementById('question-text').innerText = currentQuestion.question; document.getElementById('explanation').style.display = 'none'; document.getElementById('next-btn').style.display = 'none';
-            const imgElement = document.getElementById('question-image'); if (currentQuestion.image) { imgElement.src = currentQuestion.image; imgElement.style.display = 'block'; } else { imgElement.style.display = 'none'; }
-            const optionsList = document.getElementById('options-list'); optionsList.innerHTML = ''; currentQuestion.options.forEach(option => { const li = document.createElement('li'); const button = document.createElement('button'); button.className = 'option-btn'; button.innerText = option; button.onclick = () => checkAnswer(button, option, currentQuestion); li.appendChild(button); optionsList.appendChild(li); });
-            updateFavoriteUI();
-        }
-        function getFavoriteBank() { return JSON.parse(localStorage.getItem(getUserKey('favoriteBank'))) || []; }
-        function updateFavoriteButton() { let favs = getFavoriteBank(); let btn = document.getElementById('btn-favorite'); if (favs.length > 0) { btn.style.display = 'inline-block'; document.getElementById('favorite-count').innerText = favs.length; } else { btn.style.display = 'none'; } }
-        function toggleFavorite() { const currentQ = currentQuizQuestions[currentQuestionIndex]; let favs = getFavoriteBank(); if (favs.includes(currentQ.id)) { favs = favs.filter(id => id !== currentQ.id); } else { favs.push(currentQ.id); } localStorage.setItem(getUserKey('favoriteBank'), JSON.stringify(favs)); updateFavoriteUI(); }
-        function updateFavoriteUI() { const currentQ = currentQuizQuestions[currentQuestionIndex]; let favs = getFavoriteBank(); let btn = document.getElementById('btn-toggle-favorite'); if (favs.includes(currentQ.id)) { btn.innerText = '❤️'; } else { btn.innerText = '🤍'; } }
+    }
+    function loginAndStart() {
+        let name = document.getElementById('username').value.trim();
+        if(!name) return alert("請輸入大名！");
+        userName = name;
         
-        // 共用 helper: 從字串中抓取第一個英文字母
-        const getLetter = (str) => {
-            if(!str) return "";
-            const match = str.match(/[A-Za-z]/);
-            return match ? match[0].toUpperCase() : "";
-        };
+        // Save User
+        let users = getStorage(APP_PREFIX + 'savedUsers', []).filter(u => u.name !== name);
+        users.push({name, avatar: currentAvatar});
+        setStorage(APP_PREFIX + 'savedUsers', users);
 
-        function checkAnswer(btn, selectedOption, questionData) {
-            const buttons = document.querySelectorAll('.option-btn'); 
-            buttons.forEach(button => button.disabled = true); 
-            userAnswers[questionData.id] = selectedOption;
+        if(!isPlaying) playMusic();
+        returnToDash();
+    }
+    function logout() { location.reload(); }
 
-            const correctCode = getLetter(questionData.answer);
-            const selectedCode = getLetter(selectedOption);
+    // --- Dashboard ---
+    function returnToDash() {
+        hideAllScreens();
+        document.getElementById('dashboard-screen').style.display = 'block';
+        document.getElementById('dash-name').innerText = userName;
+        document.getElementById('dash-avatar').src = `images/${currentAvatar}`;
+        
+        renderLevelGrid();
+        updateDashStats();
+        checkStandardResume();
+    }
+
+    function renderLevelGrid() {
+        let progress = getStorage(getKey('quizProgress'), { maxLevel: 1, scores: {} });
+        let grid = document.getElementById('level-grid');
+        grid.innerHTML = '';
+
+        LEVEL_CONFIG.forEach((count, idx) => {
+            let lvl = idx + 1;
+            let btn = document.createElement('div');
+            btn.className = 'level-btn-grid';
             
-            const isCorrect = (correctCode === selectedCode);
-            
-            if (isCorrect) { 
-                btn.classList.add('correct'); 
-                score++; 
-                audioCorrect.play().catch(e=>{}); 
-                confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 }, colors: ['#D4AF37', '#8B0000'] }); 
-                if (isMistakeMode) removeFromMistakeBank(questionData.id); 
-            } else { 
-                btn.classList.add('wrong'); 
-                audioFail.play().catch(e=>{}); 
-                buttons.forEach(button => { 
-                    const btnLetter = getLetter(button.innerText);
-                    if (btnLetter === correctCode) {
-                        button.classList.add('correct'); 
-                    }
-                }); 
-                addToMistakeBank(questionData.id); 
+            if (lvl <= progress.maxLevel) {
+                let score = progress.scores[lvl];
+                let stars = '';
+                if(score === 100) stars = '👑';
+                else if(score >= 90) stars = '⭐⭐⭐';
+                else if(score >= 80) stars = '⭐⭐';
+                else if(score >= 70) stars = '⭐';
+                
+                btn.innerHTML = `<div class="level-num">${lvl}</div><div class="level-stars">${score !== undefined ? stars : '新'}</div>`;
+                btn.onclick = () => startStandardQuiz(lvl);
+            } else {
+                btn.disabled = true;
+                btn.setAttribute('disabled', 'true');
+                btn.innerHTML = `<div class="level-num" style="font-size:1.2em">🔒</div>`;
             }
-            document.getElementById('explanation-text').innerText = questionData.explanation || "暫無解析"; 
-            document.getElementById('explanation').style.display = 'block'; 
-            document.getElementById('next-btn').style.display = 'block';
-        }
+            grid.appendChild(btn);
+        });
+    }
 
-        function nextQuestion() { currentQuestionIndex++; let progress = ((currentQuestionIndex) / currentQuizQuestions.length) * 100; document.getElementById('progress-bar').style.width = progress + "%"; if (currentQuestionIndex < currentQuizQuestions.length) loadQuestion(); else setTimeout(showResult, 500); }
-        function showResult() {
-            document.getElementById('quiz-content').style.display = 'none'; document.getElementById('score-box').style.display = 'block'; let finalScore = Math.round((score / currentQuizQuestions.length) * 100); document.getElementById('final-score').innerText = finalScore; document.getElementById('final-name').innerText = userName; let comment = "", progress = getProgress(), isPass = finalScore >= 80;
-            if(finalScore === 100) comment = "🏆 廷尉奇才！公正嚴明！"; else if(finalScore >= 90) comment = "🌟 執法如山！令人佩服！"; else if(finalScore >= 80) comment = "🎉 審判合格！繼續保持！"; else comment = "💪 尚需努力！熟讀律例！";
-            document.getElementById('score-comment').innerText = comment; let unlockMsg = document.getElementById('unlock-msg'); let newCardAlert = document.getElementById('new-card-alert'); let gotNewCard = false;
-            if (!isMistakeMode && !isFavoriteMode && isPass) { if (finalScore >= 80) { let oldScore = progress.levelScores[currentLevel]; if (oldScore === undefined || oldScore < 80) { gotNewCard = true; } } if (currentLevel === progress.maxLevel && currentLevel < LEVEL_CONFIG.length) { unlockMsg.style.display = 'block'; } else unlockMsg.style.display = 'none'; confetti({ particleCount: 200, spread: 150, colors: ['#D4AF37', '#C0392B', '#FFF'] }); } else { unlockMsg.style.display = 'none'; }
-            if(gotNewCard) newCardAlert.style.display = 'block'; else newCardAlert.style.display = 'none';
-            if (!isMistakeMode && !isFavoriteMode) saveProgress(currentLevel, finalScore);
-            let modeName = `第 ${currentLevel} 回`; if(isMistakeMode) modeName = "案件重審"; if(isFavoriteMode) modeName = "刑律收藏";
-            saveHistory(userName, finalScore, currentQuizQuestions, userAnswers, modeName); renderReviewList('review-list', currentQuizQuestions, userAnswers);
-        }
-        function showCollection() { document.querySelectorAll('.quiz-container > div').forEach(el => el.style.display = 'none'); document.getElementById('collection-screen').style.display = 'block'; renderCollectionGrid(); }
-        function renderCollectionGrid() { const grid = document.getElementById('collection-grid'); grid.innerHTML = ""; const progress = getProgress(); for (let i = 1; i <= LEVEL_CONFIG.length; i++) { let bestScore = progress.levelScores[i]; let isUnlocked = (bestScore !== undefined && bestScore >= 80); let numStr = i < 10 ? `0${i}` : `${i}`; let imgSrc = `images/card_${numStr}.jpg`; let cardItem = document.createElement('div'); if (isUnlocked) { cardItem.className = 'card-item'; cardItem.innerHTML = `<img src="${imgSrc}" class="card-img" onerror="this.style.display='none'">`; cardItem.onclick = () => openCardModal(imgSrc, `第 ${i} 關證物`); } else { cardItem.className = 'card-item locked'; cardItem.innerHTML = `<img src="${imgSrc}" class="card-img" onerror="this.style.display='none'"><div class="card-overlay"><div class="card-lock-icon">🔒</div><div class="card-label">第 ${i} 關</div></div>`; } grid.appendChild(cardItem); } }
-        function openCardModal(src, title) { document.getElementById('modal-img').src = src; document.getElementById('modal-title').innerText = title; document.getElementById('card-modal').style.display = 'flex'; }
-        function closeCardModal() { document.getElementById('card-modal').style.display = 'none'; }
-        function getMistakeBank() { return JSON.parse(localStorage.getItem(getUserKey('mistakeBank'))) || []; }
-        function updateMistakeButton() { let mistakes = getMistakeBank(); let btn = document.getElementById('btn-mistake'); if (mistakes.length > 0) { btn.style.display = 'inline-block'; document.getElementById('mistake-count').innerText = mistakes.length; } else btn.style.display = 'none'; }
-        function addToMistakeBank(id) { let mistakes = getMistakeBank(); if (!mistakes.includes(id)) { mistakes.push(id); localStorage.setItem(getUserKey('mistakeBank'), JSON.stringify(mistakes)); } }
-        function removeFromMistakeBank(id) { let mistakes = getMistakeBank(); mistakes = mistakes.filter(mId => mId !== id); localStorage.setItem(getUserKey('mistakeBank'), JSON.stringify(mistakes)); }
-        function toggleReview() { let reviewArea = document.getElementById('full-review-area'); reviewArea.style.display = (reviewArea.style.display === 'none') ? 'block' : 'none'; if (reviewArea.style.display === 'block') reviewArea.scrollIntoView({ behavior: 'smooth' }); }
+    function updateDashStats() {
+        document.getElementById('dash-mistake-count').innerText = getStorage(getKey('mistakeBank'), []).length;
+        document.getElementById('dash-fav-count').innerText = getStorage(getKey('favoriteBank'), []).length;
+    }
+
+    // --- Standard Quiz Logic ---
+    let stdState = { qList: [], idx: 0, answers: {}, score: 0, level: 1 };
+
+    function checkStandardResume() {
+        let save = getStorage(getKey('resume_standard'), null);
+        document.getElementById('standard-resume-area').style.display = save ? 'block' : 'none';
+    }
+
+    function resumeStandardQuiz() {
+        let save = getStorage(getKey('resume_standard'), null);
+        if(!save) return;
+        stdState = save;
+        enterStandardScreen();
+    }
+
+    function startStandardQuiz(level) {
+        // New Game
+        setStorage(getKey('resume_standard'), null); // clear old save
+        let start = 0;
+        for(let i=0; i<level-1; i++) start += LEVEL_CONFIG[i];
+        let end = start + LEVEL_CONFIG[level-1];
         
-        // 🟢 修正：詳解列表邏輯 (支援 Regex 與 色塊顯示)
-        function renderReviewList(elementId, questionsData, answersData) { 
-            let list = document.getElementById(elementId); 
-            list.innerHTML = ""; 
-            questionsData.forEach((q, index) => { 
-                let userAnsStr = answersData[q.id] || "";
-                let correctAnsStr = q.answer;
-                
-                // 使用嚴格字母比對
-                let isRight = (getLetter(userAnsStr) === getLetter(correctAnsStr));
-                
-                let tagClass = isRight ? "tag-correct" : "tag-wrong"; 
-                let tagText = isRight ? "正確" : "錯誤"; 
-                
-                // 決定「你的答案」的樣式
-                let userAnsClass = isRight ? "ans-tag is-correct" : "ans-tag is-wrong";
+        stdState = {
+            qList: allQuestions.slice(start, end),
+            idx: 0,
+            answers: {}, // { id: option }
+            score: 0,
+            level: level
+        };
+        enterStandardScreen();
+    }
 
-                let html = `<li class="review-item">
-                    <div style="font-weight:bold; margin-bottom:10px;">
-                        <span class="tag ${tagClass}">${tagText}</span> ${index + 1}. ${q.question}
-                    </div>`; 
-                if (q.image) html += `<img src="${q.image}" style="max-height:150px; display:block; margin:10px 0;">`; 
-                html += `<div style="font-size:0.9em; color:#555;">
-                            你的答案：<span class="${userAnsClass}">${userAnsStr || "未作答"}</span> <br> 
-                            正確答案：<span class="ans-tag is-correct">${correctAnsStr}</span>
-                         </div>
-                         <div style="margin-top:5px; background:#ecf0f1; padding:8px; border-radius:5px; font-size:0.9em; color:#2c3e50;">
-                            💡 ${q.explanation || "暫無解析"}
-                         </div>
-                    </li>`; 
-                list.innerHTML += html; 
-            }); 
+    function enterStandardScreen() {
+        hideAllScreens();
+        document.getElementById('quiz-content').style.display = 'block';
+        document.getElementById('std-level-title').innerText = `第 ${stdState.level} 回`;
+        document.getElementById('std-total').innerText = stdState.qList.length;
+        renderStandardQuestion();
+    }
+
+    function renderStandardQuestion() {
+        let q = stdState.qList[stdState.idx];
+        document.getElementById('std-current').innerText = stdState.idx + 1;
+        
+        // Progress
+        let pct = (stdState.idx / stdState.qList.length) * 100;
+        document.getElementById('std-progress-bar').style.width = pct + "%";
+
+        // Content
+        // Remove duplicated "1. 1." if exists in text
+        let qText = q.question.replace(/^\d+\.\s*\d+\.\s*/, '').replace(/^\d+\.\s*/, '');
+        document.getElementById('std-question-text').innerText = (stdState.idx+1) + ". " + qText;
+        
+        let imgEl = document.getElementById('std-question-img');
+        if(q.image) { imgEl.src = q.image; imgEl.style.display = 'block'; }
+        else imgEl.style.display = 'none';
+
+        // Options
+        let optsDiv = document.getElementById('std-options-area');
+        optsDiv.innerHTML = '';
+        
+        let savedAns = stdState.answers[q.id];
+        let isAnswered = !!savedAns;
+
+        // Favorite Btn Status
+        updateStdFavBtn(q.id);
+
+        q.options.forEach(opt => {
+            let btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            
+            if(isAnswered) {
+                btn.disabled = true;
+                let correctL = getLetter(q.answer);
+                let thisL = getLetter(opt);
+                let userL = getLetter(savedAns);
+                
+                if(thisL === correctL) btn.classList.add('correct');
+                if(thisL === userL && userL !== correctL) btn.classList.add('wrong');
+            } else {
+                btn.onclick = () => checkStandardAnswer(btn, opt, q);
+            }
+            optsDiv.appendChild(btn);
+        });
+
+        // Explanation & Next Btn
+        let expBox = document.getElementById('std-explanation');
+        let nextBtn = document.getElementById('std-next-btn');
+        if(isAnswered) {
+            expBox.style.display = 'block';
+            expBox.innerHTML = `<strong>💡 解析：</strong>${q.explanation || '暫無'}`;
+            nextBtn.style.display = 'block';
+        } else {
+            expBox.style.display = 'none';
+            nextBtn.style.display = 'none';
+        }
+    }
+
+    function updateStdFavBtn(qid) {
+        let favs = getStorage(getKey('favoriteBank'), []);
+        let btn = document.getElementById('std-fav-btn');
+        btn.innerText = favs.includes(qid) ? '❤️' : '🤍';
+    }
+
+    function toggleFavoriteStandard() {
+        let qid = stdState.qList[stdState.idx].id;
+        toggleFavLogic(qid);
+        updateStdFavBtn(qid);
+    }
+
+    function checkStandardAnswer(btn, opt, q) {
+        stdState.answers[q.id] = opt;
+        let isCorrect = getLetter(opt) === getLetter(q.answer);
+        if(isCorrect) {
+            stdState.score++;
+            audioCorrect.play();
+            confetti({ particleCount: 30, origin: { y: 0.6 } });
+        } else {
+            audioFail.play();
+            addMistake(q.id);
+        }
+        
+        // Save
+        setStorage(getKey('resume_standard'), stdState);
+        renderStandardQuestion(); // Re-render to show colors
+    }
+
+    function nextStandardQuestion() {
+        stdState.idx++;
+        if(stdState.idx >= stdState.qList.length) {
+            finishStandardQuiz();
+        } else {
+            setStorage(getKey('resume_standard'), stdState);
+            renderStandardQuestion();
+        }
+    }
+
+    function pauseStandardQuiz() {
+        if(confirm("確定要暫離嗎？進度已自動儲存。")) returnToDash();
+    }
+
+    function finishStandardQuiz() {
+        setStorage(getKey('resume_standard'), null); // clear save
+        
+        let finalScore = Math.round((stdState.score / stdState.qList.length) * 100);
+        let progress = getStorage(getKey('quizProgress'), { maxLevel: 1, scores: {} });
+        
+        // Update High Score
+        if(!progress.scores[stdState.level] || finalScore > progress.scores[stdState.level]) {
+            progress.scores[stdState.level] = finalScore;
+        }
+        // Unlock Next
+        if(finalScore >= PASS_SCORE && stdState.level === progress.maxLevel && stdState.level < LEVEL_CONFIG.length) {
+            progress.maxLevel++;
+            document.getElementById('unlock-msg').style.display = 'block';
+        } else {
+            document.getElementById('unlock-msg').style.display = 'none';
+        }
+        setStorage(getKey('quizProgress'), progress);
+        
+        // Add History
+        addHistory(`第 ${stdState.level} 回`, finalScore);
+
+        showScoreScreen(finalScore);
+    }
+
+    // --- Waterfall Mode Logic ---
+    let wfState = { mode: 'speed', qList: [], answers: {}, score: 0 };
+    // Save keys: resume_speed, resume_mistake, resume_favorite
+
+    function initWaterfallMode(mode) {
+        let saveKey = getKey(`resume_${mode}`);
+        let save = getStorage(saveKey, null);
+        
+        if(save) {
+            if(confirm("發現上次未完成的進度，是否繼續？\n按「確定」繼續，按「取消」重新開始。")) {
+                wfState = save;
+                enterWaterfallScreen();
+                return;
+            }
+        }
+        
+        // Start New
+        let list = [];
+        if(mode === 'speed') {
+            // Requirement 12: Ensure order matches JSON
+            list = [...allQuestions]; 
+        } else if(mode === 'mistake') {
+            let ids = getStorage(getKey('mistakeBank'), []);
+            if(!ids.length) return alert("目前沒有錯題！");
+            list = allQuestions.filter(q => ids.includes(q.id));
+        } else if(mode === 'favorite') {
+            let ids = getStorage(getKey('favoriteBank'), []);
+            if(!ids.length) return alert("目前沒有收藏！");
+            list = allQuestions.filter(q => ids.includes(q.id));
         }
 
-        function saveHistory(name, score, questionsData, answersData, modeName) { let history = JSON.parse(localStorage.getItem(getUserKey('quizHistory'))) || []; let record = { id: Date.now(), name: name, score: score, date: new Date().toLocaleString(), mode: modeName, answers: answersData, questionIds: questionsData.map(q => q.id) }; history.push(record); localStorage.setItem(getUserKey('quizHistory'), JSON.stringify(history)); }
-        function showHistory() { document.querySelectorAll('.quiz-container > div').forEach(el => el.style.display = 'none'); document.getElementById('history-screen').style.display = 'block'; let history = JSON.parse(localStorage.getItem(getUserKey('quizHistory'))) || []; let list = document.getElementById('history-list'); list.innerHTML = ""; if(history.length === 0) list.innerHTML = "<li style='justify-content:center'>尚無史料記載</li>"; else { history.reverse().forEach(rec => { let li = document.createElement('li'); li.innerHTML = `<div class="history-info"><strong>${rec.mode}</strong> - <span style="color:${rec.score>=80?'#27ae60':'#c0392b'}">${rec.score}分</span><br><small style="color:gray">${rec.date}</small></div><div class="history-actions"><button class="btn btn-green btn-sm" onclick="replayHistory(${rec.id})">調閱</button><button class="btn btn-red btn-sm" onclick="deleteHistoryItem(${rec.id})">銷毀</button></div>`; list.appendChild(li); }); } }
-        function deleteHistoryItem(id) { if(!confirm("確定要銷毀這份史料嗎？")) return; let history = JSON.parse(localStorage.getItem(getUserKey('quizHistory'))) || []; history = history.filter(r => r.id !== id); localStorage.setItem(getUserKey('quizHistory'), JSON.stringify(history)); showHistory(); }
-        function replayHistory(recordId) { let history = JSON.parse(localStorage.getItem(getUserKey('quizHistory'))) || []; let record = history.find(r => r.id === recordId); if (!record) return; document.querySelectorAll('.quiz-container > div').forEach(el => el.style.display = 'none'); document.getElementById('history-detail-screen').style.display = 'block'; document.getElementById('history-date').innerText = record.date; document.getElementById('history-score').innerText = record.score; let examQuestions = allQuestions.filter(q => record.questionIds.includes(q.id)); renderReviewList('history-review-list', examQuestions, record.answers); }
-    </script>
+        wfState = { mode: mode, qList: list, answers: {}, score: 0 };
+        setStorage(saveKey, wfState); // Initial save
+        enterWaterfallScreen();
+    }
+
+    function enterWaterfallScreen() {
+        hideAllScreens();
+        document.getElementById('waterfall-screen').style.display = 'block';
+        
+        // UI Titles
+        let map = { 'speed': '極速刷題', 'mistake': '複習錯題', 'favorite': '查看收藏' };
+        document.getElementById('wf-mode-title').innerText = map[wfState.mode];
+        
+        renderWaterfallItems();
+        updateWaterfallHeader();
+    }
+
+    function exitWaterfallMode() {
+        if(confirm("確定要離開嗎？進度已自動儲存。")) {
+            returnToDash();
+        }
+    }
+
+    function updateWaterfallHeader() {
+        let answeredCount = Object.keys(wfState.answers).length;
+        let total = wfState.qList.length;
+        let pct = total === 0 ? 0 : (answeredCount / total) * 100;
+        
+        document.getElementById('wf-score-display').innerText = `答對: ${wfState.score} / ${answeredCount}`;
+        document.getElementById('wf-progress-bar').style.width = pct + "%";
+    }
+
+    function renderWaterfallItems() {
+        let container = document.getElementById('waterfall-list');
+        container.innerHTML = '';
+        
+        if(wfState.qList.length === 0) {
+            container.innerHTML = '<div class="empty-state">這裡空空如也</div>';
+            return;
+        }
+
+        wfState.qList.forEach((q, idx) => {
+            let savedAns = wfState.answers[q.id];
+            let isAnswered = !!savedAns;
+            let isCorrect = isAnswered && (getLetter(savedAns) === getLetter(q.answer));
+
+            let card = document.createElement('div');
+            card.className = `wf-card ${isAnswered ? (isCorrect ? 'answered-correct' : 'answered-wrong') : ''}`;
+            card.id = `wf-card-${q.id}`;
+
+            // Tools (Heart & Delete)
+            let isFav = getStorage(getKey('favoriteBank'), []).includes(q.id);
+            let toolsHtml = `
+                <div class="wf-card-tools">
+                    <button class="wf-tool-btn wf-delete-btn" id="del-${q.id}" onclick="manualDelete(${q.id}, '${wfState.mode}')">🗑️</button>
+                    <button class="wf-tool-btn" id="fav-${q.id}" onclick="toggleWaterfallFav(${q.id})" style="color:${isFav? 'var(--favorite-color)' : '#ccc'}">${isFav?'❤️':'🤍'}</button>
+                </div>
+            `;
+            
+            // Clean Text
+            let qText = q.question.replace(/^\d+\.\s*\d+\.\s*/, '').replace(/^\d+\.\s*/, '');
+
+            let imgHtml = q.image ? `<img src="${q.image}" class="wf-img">` : '';
+
+            // Options
+            let optsHtml = '';
+            q.options.forEach(opt => {
+                let cls = '';
+                if(isAnswered) {
+                    let correctL = getLetter(q.answer);
+                    let thisL = getLetter(opt);
+                    let userL = getLetter(savedAns);
+                    if(thisL === correctL) cls += ' correct';
+                    else if(thisL === userL) cls += ' wrong';
+                    else if(!isCorrect && thisL === correctL) cls += ' missed'; // Show correct answer if wrong
+                }
+                optsHtml += `<button class="wf-option-btn ${cls}" ${isAnswered?'disabled':''} onclick="checkWaterfallAnswer(${q.id}, '${opt.replace(/'/g, "\\'")}')">${opt}</button>`;
+            });
+
+            // Explanation
+            let expStyle = isAnswered ? 'display:block;' : '';
+            
+            card.innerHTML = `
+                ${toolsHtml}
+                <div class="wf-q-text">${idx+1}. ${qText}</div>
+                ${imgHtml}
+                <div class="wf-options">${optsHtml}</div>
+                <div id="wf-exp-${q.id}" class="wf-explanation" style="${expStyle}">
+                    <strong>💡 解析：</strong>${q.explanation || '暫無'}
+                </div>
+            `;
+            container.appendChild(card);
+            
+            // Show Delete button only in specific modes
+            if(wfState.mode === 'mistake' || wfState.mode === 'favorite') {
+                document.getElementById(`del-${q.id}`).style.display = 'block';
+            }
+        });
+    }
+
+    function checkWaterfallAnswer(qid, opt) {
+        // Find Q
+        let qIndex = wfState.qList.findIndex(x => x.id === qid);
+        let q = wfState.qList[qIndex];
+        
+        // Record
+        wfState.answers[qid] = opt;
+        let isCorrect = getLetter(opt) === getLetter(q.answer);
+        
+        // Logic
+        if(isCorrect) {
+            wfState.score++;
+            audioCorrect.play();
+        } else {
+            audioFail.play();
+            addMistake(qid); // Add to mistake bank
+        }
+        
+        // Update DOM (Partial)
+        updateWaterfallHeader();
+        
+        // Re-render specifically this card to update UI classes (lazy way: replace innerHTML or just classes)
+        // For simplicity in this structure, we re-render the specific card logic logic or simpler:
+        // Let's just re-render the whole list? No, jumpy.
+        // Better: Replace the specific card's OuterHTML or modify classes manually. 
+        // Let's reload the whole list, but keep scroll position.
+        let scrollY = window.scrollY;
+        renderWaterfallItems(); // Re-render to apply classes
+        window.scrollTo(0, scrollY);
+
+        // Save
+        setStorage(getKey(`resume_${wfState.mode}`), wfState);
+    }
+
+    function toggleWaterfallFav(qid) {
+        toggleFavLogic(qid);
+        // Refresh heart icon
+        let isFav = getStorage(getKey('favoriteBank'), []).includes(qid);
+        let btn = document.getElementById(`fav-${qid}`);
+        if(btn) {
+            btn.innerHTML = isFav ? '❤️' : '🤍';
+            btn.style.color = isFav ? 'var(--favorite-color)' : '#ccc';
+        }
+    }
+
+    function manualDelete(qid, mode) {
+        if(confirm("確定要刪除這題嗎？")) {
+            if(confirm("真的確定嗎？刪除後將無法在這個模式中看到此題。")) {
+                // Remove from Storage Bank
+                if(mode === 'mistake') {
+                    let bank = getStorage(getKey('mistakeBank'), []).filter(id => id !== qid);
+                    setStorage(getKey('mistakeBank'), bank);
+                } else if(mode === 'favorite') {
+                    toggleFavLogic(qid); // logic handles removal if exists
+                }
+                
+                // Remove from Current State List
+                wfState.qList = wfState.qList.filter(q => q.id !== qid);
+                delete wfState.answers[qid]; // Remove answer record too
+                
+                // Save State
+                setStorage(getKey(`resume_${mode}`), wfState);
+                
+                // Animate removal
+                let card = document.getElementById(`wf-card-${qid}`);
+                card.style.transform = 'scale(0)';
+                setTimeout(() => renderWaterfallItems(), 300);
+            }
+        }
+    }
+
+    // --- Core Logic ---
+    function addMistake(id) {
+        let b = getStorage(getKey('mistakeBank'), []);
+        if(!b.includes(id)) { b.push(id); setStorage(getKey('mistakeBank'), b); }
+    }
+    
+    function toggleFavLogic(id) {
+        let b = getStorage(getKey('favoriteBank'), []);
+        if(b.includes(id)) b = b.filter(x => x !== id);
+        else b.push(id);
+        setStorage(getKey('favoriteBank'), b);
+    }
+
+    function addHistory(modeName, score) {
+        let h = getStorage(getKey('quizHistory'), []);
+        h.push({
+            date: new Date().toLocaleString(),
+            mode: modeName,
+            score: score,
+            id: Date.now()
+        });
+        setStorage(getKey('quizHistory'), h);
+    }
+
+    // --- Results & Screens ---
+    function hideAllScreens() {
+        const ids = ['welcome-screen', 'dashboard-screen', 'quiz-content', 'waterfall-screen', 'score-box', 'history-screen', 'collection-screen'];
+        ids.forEach(id => document.getElementById(id).style.display = 'none');
+    }
+
+    function showScoreScreen(score) {
+        hideAllScreens();
+        document.getElementById('score-box').style.display = 'block';
+        document.getElementById('final-score').innerText = score;
+        
+        let cmt = "";
+        if(score === 100) cmt = "🏆 廷尉奇才！";
+        else if(score >= 90) cmt = "🌟 執法如山！";
+        else if(score >= 70) cmt = "🎉 審判合格！";
+        else cmt = "💪 尚需努力！";
+        document.getElementById('score-comment').innerText = cmt;
+        
+        confetti({ particleCount: 150, spread: 100 });
+    }
+
+    function showHistory() {
+        hideAllScreens();
+        document.getElementById('history-screen').style.display = 'block';
+        let list = document.getElementById('history-list');
+        let data = getStorage(getKey('quizHistory'), []).reverse();
+        
+        list.innerHTML = '';
+        if(!data.length) list.innerHTML = '<li style="text-align:center; color:#999;">尚無紀錄</li>';
+        
+        data.forEach(r => {
+            let li = document.createElement('li');
+            li.style = "background:#FFF; padding:15px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd; display:flex; justify-content:space-between;";
+            li.innerHTML = `
+                <div>
+                    <strong>${r.mode}</strong> <span style="color:${r.score>=70?'var(--correct-color)':'var(--wrong-color)'}">${r.score}分</span>
+                    <div style="font-size:0.8em; color:#888;">${r.date}</div>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    function showCollection() {
+        hideAllScreens();
+        document.getElementById('collection-screen').style.display = 'block';
+        let grid = document.getElementById('collection-grid');
+        grid.innerHTML = '';
+        
+        let progress = getStorage(getKey('quizProgress'), {scores:{}});
+        
+        for(let i=1; i<=LEVEL_CONFIG.length; i++) {
+            let score = progress.scores[i];
+            let unlocked = score !== undefined && score >= 70;
+            let imgNum = i < 10 ? '0'+i : i;
+            let src = `images/card_${imgNum}.jpg`;
+            
+            let d = document.createElement('div');
+            d.className = unlocked ? 'card-item' : 'card-item locked';
+            d.innerHTML = `<img src="${src}" onerror="this.style.display='none'">`;
+            
+            if(unlocked) d.onclick = () => showModal(src, `第 ${i} 回證物`);
+            else d.innerHTML += `<div style="position:absolute; top:40%; left:0; width:100%; text-align:center; font-size:2em;">🔒</div>`;
+            
+            grid.appendChild(d);
+        }
+    }
+
+    function showModal(src, title) {
+        document.getElementById('modal-img').src = src;
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('card-modal').style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('card-modal').style.display = 'none'; }
+
+</script>
 </body>
 </html>
