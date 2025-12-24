@@ -3,953 +3,1163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>國文：張釋之執法 選擇題大挑戰</title>
-    <link href="https://fonts.googleapis.com/css2?family=CwTeXYen:wght@400;600&display=swap" rel="stylesheet">
+    <title>國文第3冊：L7張釋之執法</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* --- 基礎變數設定 --- */
         :root {
-            --primary-color: #2c3e50;   /* 官服藍深色 */
-            --secondary-color: #c0392b; /* 硃批紅 */
-            --bg-color: #f4f6f7;        /* 卷宗白 */
-            --text-color: #2c3e50;
-            --accent-color: #e74c3c;
-            --correct-color: #27ae60;
-            --wrong-color: #c0392b;
-            --locked-color: #bdc3c7;
-            --purple-color: #8e44ad;    /* 極速刷題主題色 */
-            --music-btn-color: #7f8c8d;
-            --favorite-color: #e91e63;
+            /* 配色系統 - 國文主題 (水墨與硃砂) */
+            --primary-color: #2c3e50;   /* 墨韻深灰 */
+            --secondary-color: #c0392b; /* 硃砂紅 */
+            --bg-color: #f9f7f3;        /* 宣紙米黃 */
+            --text-color: #2c3e50;      /* 墨黑 */
+            --accent-color: #d35400;    /* 磚紅 */
+            --correct-color: #27ae60;   /* 竹林綠 */
+            --wrong-color: #c0392b;     /* 批改紅 */
+            --locked-color: #95a5a6;    /* 鎖定灰 */
+            --favorite-color: #8e44ad;  /* 典雅紫 */
+            --quick-mode-color: #d35400; /* 極速刷題(磚紅) */
+            --quick-mode-bg: #fae5d3;    /* 極速刷題淡紅背景 */
+            --player-bg: #ffffff;
+            --header-height: 100px;      /* 音樂播放器高度 */
         }
 
         body { 
-            font-family: 'CwTeXYen', "Microsoft JhengHei", Arial, sans-serif; 
-            max-width: 1000px; margin: 0 auto; padding: 20px; 
-            background-color: var(--bg-color); color: var(--text-color);
-            background-image: url('images/background.jpg'); /* 需求 11 */
-            background-size: cover; background-position: center; background-attachment: fixed;
+            font-family: 'Noto Sans TC', "Microsoft JhengHei", Arial, sans-serif; 
+            max-width: 1000px; /* 加寬一點以容納雙區塊 */
+            margin: 0 auto; 
+            padding: calc(var(--header-height) + 20px) 20px 20px 20px; 
+            background-color: var(--bg-color); 
+            color: var(--text-color);
+            background-image: 
+                radial-gradient(var(--secondary-color) 0.5px, transparent 0.5px),
+                radial-gradient(var(--secondary-color) 0.5px, transparent 0.5px);
+            background-position: 0 0, 25px 25px;
+            background-size: 50px 50px;
+            background-attachment: fixed;
             min-height: 100vh;
         }
+
+        h1, h2, h3 { text-align: center; color: var(--text-color); }
+        h1 { color: var(--primary-color); text-shadow: 1px 1px 2px rgba(0,0,0,0.1); margin-top: 0;}
+
+        /* --- 音樂播放器固定列 --- */
+        #music-player-bar {
+            position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height);
+            background-color: var(--player-bg); border-bottom: 3px solid var(--primary-color);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; align-items: center;
+            justify-content: space-between; padding: 0 15px; box-sizing: border-box;
+            z-index: 10000;
+        }
+        .player-left { flex: 1; display: flex; justify-content: flex-start; }
+        .player-right { flex: 1; display: flex; justify-content: flex-end; }
+        .player-icon { font-size: 1.5em; background: #fdf2e9; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid var(--primary-color); color: var(--primary-color);}
+
+        #yt-wrapper {
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            width: 144px; height: 81px; background: #000; border: 2px solid var(--text-color);
+            border-radius: 4px; overflow: hidden; transition: all 0.3s ease; z-index: 5;
+        }
+        .yt-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; z-index: 20; }
+        #yt-wrapper.video-hidden { width: 0; height: 0; border: none; opacity: 0; }
         
-        /* 為了確保背景圖未載入時仍有基本紋理 */
-        body::before {
-            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: radial-gradient(#bdc3c7 1px, transparent 1px);
-            background-size: 20px 20px; z-index: -1; opacity: 0.5; pointer-events: none;
+        .player-controls { display: flex; align-items: center; gap: 8px; }
+        .ctrl-btn { background: none; border: none; cursor: pointer; color: #7f8c8d; font-size: 1.4em; padding: 5px; }
+        .ctrl-btn:hover, .ctrl-btn.active { color: var(--primary-color); }
+        .volume-container { display: flex; align-items: center; gap: 5px; }
+        .volume-slider { width: 60px; accent-color: var(--primary-color); cursor: pointer;}
+        .mode-btn { border: 1px solid #bdc3c7; background: #fff; padding: 5px 10px; border-radius: 20px; font-size: 0.8em; cursor: pointer; display: flex; align-items: center; gap: 5px;}
+        .mode-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
+
+        /* --- 容器通用 --- */
+        .container-box {
+            background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05);
+            backdrop-filter: blur(10px); position: relative; margin-bottom: 20px;
         }
 
-        h1 { font-size: 2.8em; color: var(--primary-color); text-align: center; margin-top: 0; text-shadow: 2px 2px 0px rgba(255,255,255,0.8); font-weight: bold; letter-spacing: 2px;}
-        h2, h3 { color: var(--primary-color); text-align: center; }
-
-        /* --- 主要容器 --- */
-        .quiz-container { 
-            background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 15px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 6px double var(--primary-color); 
-            position: relative; overflow: hidden; min-height: 550px;
+        /* --- Welcome Screen --- */
+        #welcome-screen {
+            background: linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url('images/elements.jpg');
+            background-size: cover; background-position: center; border-left: 6px solid var(--primary-color);
         }
-        .quiz-container::before { content: " "; position: absolute; top: 5px; left: 5px; width: 30px; height: 30px; border-top: 3px solid var(--primary-color); border-left: 3px solid var(--primary-color); }
-        .quiz-container::after { content: " "; position: absolute; bottom: 5px; right: 5px; width: 30px; height: 30px; border-bottom: 3px solid var(--primary-color); border-right: 3px solid var(--primary-color); }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.5s ease-out; }
-
-        /* --- 按鈕樣式 --- */
-        .btn {
-            background-color: var(--primary-color); color: #FFF; border: none;
-            padding: 12px 24px; font-size: 1.2em; border-radius: 8px;
-            cursor: pointer; transition: 0.3s; box-shadow: 0 4px 0 #1a252f;
-            font-family: inherit; font-weight: bold; margin: 5px; display: inline-block; letter-spacing: 1px;
-        }
-        .btn:hover { transform: translateY(-3px); opacity: 0.9; }
-        .btn:active { transform: translateY(2px); box-shadow: none; }
-        .btn:disabled { background-color: #bdc3c7; box-shadow: none; cursor: not-allowed; transform: none; }
-        
-        .btn-green { background-color: var(--correct-color); box-shadow: 0 4px 0 #1e8449; }
-        .btn-red { background-color: var(--accent-color); box-shadow: 0 4px 0 #922b21; }
-        .btn-purple { background-color: var(--purple-color); box-shadow: 0 4px 0 #6c3483; }
-        .btn-gray { background-color: #95a5a6; box-shadow: 0 4px 0 #7f8c8d; }
-        .btn-pink { background-color: var(--favorite-color); box-shadow: 0 4px 0 #c2185b; }
-        
-        .btn-sm { padding: 8px 16px; font-size: 1em; margin: 0 2px; box-shadow: 0 2px 0 rgba(0,0,0,0.3); border-radius: 5px;}
-
-        /* 音樂按鈕 */
-        .btn-music { background-color: #95A5A6; box-shadow: 0 2px 0 #7F8C8D; opacity: 0.7; transition: all 0.3s ease; }
-        .btn-music.playing { background-color: #3498DB; box-shadow: 0 2px 0 #2980B9; opacity: 1; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(52, 152, 219, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); } }
-
-        /* 輸入框與登入 */
-        input[type="text"] {
-            padding: 12px; font-size: 1.5em; border: 2px solid var(--primary-color); background-color: #FFF;
-            border-radius: 8px; margin: 15px; font-family: inherit; text-align: center; width: 80%; color: var(--text-color);
-        }
-        .quick-login-area { margin-top: 15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-        .user-tag {
-            background: #fff; border: 2px solid var(--primary-color); padding: 8px 15px; border-radius: 20px;
-            cursor: pointer; font-size: 1.1em; transition: 0.2s; color: var(--primary-color); display: flex; align-items: center; gap: 8px; 
-        }
-        .user-tag:hover { background: var(--primary-color); color: white; }
-        .delete-user { font-size: 0.9em; cursor: pointer; padding: 2px 6px; border-radius: 50%; background: rgba(0,0,0,0.1); transition: 0.2s; }
-        .delete-user:hover { background: var(--wrong-color); color: white; transform: scale(1.2); }
-
         .avatar-selection { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
         .avatar-option {
-            width: 80px; height: 80px; border-radius: 50%; border: 4px solid transparent;
-            cursor: pointer; transition: 0.3s; object-fit: cover; background: #FFF; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            width: 80px; height: 80px; border-radius: 50%; border: 4px solid #fff; cursor: pointer;
+            transition: 0.3s; object-fit: cover; background: #FFF; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
-        .avatar-option.selected { border-color: var(--primary-color); box-shadow: 0 0 15px var(--secondary-color); transform: scale(1.1); background: #ecf0f1; }
+        .avatar-option.selected { border-color: var(--primary-color); transform: scale(1.1); }
+        .quick-login-area { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px; }
+        .user-tag { background: #fff; border: 1px solid #bdc3c7; padding: 6px 15px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.95em;}
+        .delete-user { font-weight: bold; padding: 2px 6px; border-radius: 50%; background: #eee; color: #888; }
+        .delete-user:hover { background: var(--wrong-color); color: #fff; }
+        input[type="text"] { padding: 12px; font-size: 1.2em; border: 2px solid #bdc3c7; border-radius: 30px; width: 80%; text-align: center; margin: 10px 0;}
 
-        /* --- 儀表板 (Dashboard) 重新設計 (需求 1) --- */
+        /* --- Dashboard (Level Screen) --- */
+        #level-screen-content {
+            display: flex; gap: 20px; align-items: stretch;
+            min-height: 400px;
+        }
+        
+        /* Dashboard 背景圖設定 */
         #level-screen {
-            background: rgba(255,255,255,0.9); border-radius: 10px;
+            background: linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), url('images/elements.jpg');
+            background-size: cover; background-position: center;
         }
-        .dashboard-header {
-            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
-            padding: 10px 20px; border-bottom: 2px solid #bdc3c7; margin-bottom: 20px;
-        }
-        .user-info-display { font-size: 1.2em; color: #34495e; display: flex; align-items: center; gap: 10px; }
-        
-        .dashboard-layout {
-            display: flex; flex-wrap: wrap; gap: 20px; min-height: 400px;
-        }
-        .section-standard {
-            flex: 2; border: 2px solid var(--primary-color); border-radius: 10px; padding: 15px;
-            background: rgba(236, 240, 241, 0.5); min-width: 300px;
-        }
-        .section-speed {
-            flex: 1; border: 2px solid var(--purple-color); border-radius: 10px; padding: 15px;
-            background: rgba(244, 236, 247, 0.5); min-width: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .section-title { font-size: 1.4em; font-weight: bold; margin-bottom: 15px; text-align: center; display: block; width: 100%; border-bottom: 1px dashed #ccc; padding-bottom: 10px;}
-        .section-standard .section-title { color: var(--primary-color); }
-        .section-speed .section-title { color: var(--purple-color); }
 
-        /* Grid 網格排列 (需求 1) */
+        /* 左側：標準實驗區 */
+        .dashboard-std-zone {
+            flex: 2; border: 1px solid #e1e8ed; border-radius: 12px; padding: 20px;
+            background: rgba(255,255,255,0.8);
+        }
+        .dashboard-title { 
+            font-size: 1.4em; color: var(--primary-color); margin-bottom: 15px; 
+            display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #bdc3c7; padding-bottom: 10px;
+        }
+
+        /* Grid Layout for Levels */
         .level-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 15px; padding: 10px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px; justify-items: center;
         }
-        .level-btn-simple {
-            width: 100%; aspect-ratio: 1; border-radius: 10px; border: 2px solid var(--primary-color);
-            background: #FFF; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: 0.2s; box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+        .level-grid-btn {
+            width: 100%; aspect-ratio: 1; border-radius: 15px;
+            background: #fff; border: 3px solid var(--primary-color);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            cursor: pointer; transition: 0.2s; box-shadow: 0 4px 0 #95a5a6; color: var(--text-color);
         }
-        .level-btn-simple:hover:not(:disabled) { transform: scale(1.05); background-color: #ecf0f1; border-color: var(--secondary-color); }
-        .level-btn-simple:disabled { background: #e0e0e0; border-color: #bdc3c7; color: #999; cursor: not-allowed; }
-        .level-num { font-size: 1.5em; font-weight: bold; }
-        .level-status { font-size: 0.8em; margin-top: 5px; }
-
-        .dashboard-footer {
-            margin-top: 20px; padding-top: 20px; border-top: 2px solid #bdc3c7;
-            display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
-        }
-
-        /* --- 瀑布流刷題模式 (需求 2) --- */
-        #waterfall-screen {
-            display: none; height: 80vh; overflow-y: auto; background: #fff; border-radius: 10px; border: 2px solid var(--primary-color);
-            scroll-behavior: smooth; position: relative;
-        }
-        .sticky-header {
-            position: sticky; top: 0; z-index: 100; background: var(--primary-color); color: white;
-            padding: 10px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
-        }
-        .sticky-header.purple-theme { background: var(--purple-color); }
-        .wf-progress-container { flex-grow: 1; margin: 0 20px; background: rgba(255,255,255,0.3); height: 10px; border-radius: 5px; overflow:hidden;}
-        .wf-progress-bar { height: 100%; background: #2ecc71; width: 0%; transition: width 0.3s; }
-        .wf-score-board { font-size: 1.2em; font-weight: bold; min-width: 120px; text-align: right; }
-
-        .wf-list { padding: 20px; max-width: 800px; margin: 0 auto; }
-        .wf-card {
-            background: #fdfdfd; border: 2px solid #ecf0f1; border-radius: 10px; padding: 20px; margin-bottom: 25px;
-            position: relative; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .wf-card.locked { background: #fafafa; border-color: #bdc3c7; }
-        .wf-card:hover { border-color: var(--primary-color); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .level-grid-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 6px 0 #95a5a6; background: #fdf2e9; }
+        .level-grid-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: none; }
+        .level-grid-btn:disabled { border-color: #bdc3c7; color: #bdc3c7; background: #f0f0f0; cursor: not-allowed; box-shadow: none;}
+        /* 修改點：加大圖示 */
+        .lvl-icon { font-size: 2.5em; margin-bottom: 5px; }
+        .lvl-score { font-size: 0.85em; font-weight: bold; color: var(--correct-color); }
+        /* 修改點：新增標題樣式，加大字體 */
+        .lvl-label { font-size: 1.3em; font-weight: bold; font-family: "KaiTi", "BiauKai", serif;}
         
-        /* 收藏愛心與垃圾桶按鈕 */
-        .wf-actions { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; }
-        .icon-btn { cursor: pointer; font-size: 1.4em; background: none; border: none; padding: 0; transition: 0.2s; }
-        .icon-btn:hover { transform: scale(1.2); }
-        .heart-btn { color: #ccc; }
-        .heart-btn.active { color: var(--favorite-color); }
-        .trash-btn { color: #bdc3c7; }
-        .trash-btn:hover { color: var(--wrong-color); }
-
-        .wf-question-text { font-size: 1.3em; font-weight: 600; margin-bottom: 15px; padding-right: 60px; line-height: 1.5;}
-        .wf-options { display: flex; flex-direction: column; gap: 10px; }
-        .wf-option {
-            padding: 12px; border: 2px solid #bdc3c7; border-radius: 8px; cursor: pointer; text-align: left; font-size: 1.1em; background: white; transition: 0.2s;
+        /* 右側：極速刷題區 */
+        .dashboard-speed-zone {
+            flex: 1; background: var(--quick-mode-bg); border-radius: 12px; padding: 20px;
+            border: 2px solid var(--quick-mode-color); display: flex; flex-direction: column; align-items: center;
         }
-        .wf-option:hover:not(.disabled) { background: #ecf0f1; border-color: var(--primary-color); }
-        .wf-option.correct { background: #d4edda; border-color: var(--correct-color); color: #155724; font-weight: bold; }
-        .wf-option.wrong { background: #f8d7da; border-color: var(--wrong-color); color: #721c24; }
-        .wf-option.disabled { cursor: default; opacity: 0.8; }
+        .speed-title { color: var(--quick-mode-color); font-size: 1.4em; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;}
+        .speed-big-btn {
+            width: 100%; padding: 20px; border-radius: 15px; background: var(--quick-mode-color);
+            color: white; font-size: 1.3em; border: none; cursor: pointer; font-weight: bold;
+            box-shadow: 0 5px 15px rgba(211, 84, 0, 0.3); transition: 0.3s; margin-top: auto; margin-bottom: auto;
+        }
+        .speed-big-btn:hover { transform: scale(1.05); background: #a04000; }
+
+        /* Dashboard 底部工具列 */
+        .dashboard-tools {
+            margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+            padding-top: 20px; border-top: 1px solid #bdc3c7;
+        }
         
+        /* --- Button Styles --- */
+        .btn { padding: 10px 24px; border-radius: 25px; border: none; cursor: pointer; font-weight: bold; font-size: 1.1em; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); color: #fff; background: var(--primary-color); display: inline-flex; align-items: center; gap: 5px;}
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 10px rgba(0,0,0,0.15); }
+        .btn-red { background: var(--wrong-color); } .btn-red:hover { background: #922b21; }
+        .btn-green { background: var(--correct-color); } .btn-green:hover { background: #1e8449; }
+        .btn-pink { background: var(--favorite-color); } .btn-pink:hover { background: #76448a; }
+        .btn-gray { background: #95a5a6; } .btn-gray:hover { background: #7f8c8d; }
+        .btn-blue { background: #2980b9; } .btn-blue:hover { background: #2471a3; }
+        .btn-orange { background: #d35400; } .btn-orange:hover { background: #a04000; }
+
+        /* --- Standard Quiz Mode (Single Question) --- */
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .progress-bar-container { width: 100%; background: #e0e0e0; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 20px; }
+        .progress-bar-fill { height: 100%; background: var(--secondary-color); width: 0%; transition: width 0.3s; }
+        /* 修改點：題目字體加大至 1.5em */
+        .question-box { background: #fff; padding: 20px; border-radius: 10px; border-left: 5px solid var(--primary-color); box-shadow: 0 2px 10px rgba(0,0,0,0.05); font-size: 1.5em; line-height: 1.5; margin-bottom: 20px; }
+        .option-list { list-style: none; padding: 0; }
+        /* 修改點：選項按鈕字體加大至 1.3em */
+        .option-btn { width: 100%; padding: 15px; margin-bottom: 10px; background: #fff; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; font-size: 1.3em; text-align: left; transition: 0.2s; position: relative; }
+        .option-btn:hover { border-color: var(--primary-color); background: #fdf2e9; }
+        .option-btn.correct { background: #d4edda; border-color: var(--correct-color); color: #155724; }
+        .option-btn.wrong { background: #f8d7da; border-color: var(--wrong-color); color: #721c24; }
+        /* 修改點：解析區塊加上色塊區隔 (淺藍色改為米色系) */
+        .explanation-box { 
+            background: #fdf2e9; /* 米色 */
+            padding: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #edbb99; /* 邊框 */
+            border-left: 6px solid var(--secondary-color); /* 保留左側強調線 */
+            margin-top: 25px; 
+            display: none; 
+            line-height: 1.6; 
+            font-size: 1.3em; 
+            color: #5d4037;
+        }
+
+        /* --- Waterfall Quiz Mode (Quick Quiz) --- */
+        #waterfall-screen { display: none; }
+        .waterfall-header {
+            position: sticky; top: var(--header-height); z-index: 99;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            padding: 15px 20px; border-radius: 0 0 15px 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin: -25px -25px 20px -25px;
+            border-bottom: 4px solid var(--quick-mode-color);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .waterfall-title { font-size: 1.2em; font-weight: bold; color: var(--quick-mode-color); display: flex; align-items: center; gap: 8px; }
+        .waterfall-stats { font-size: 1.1em; font-weight: bold; color: #555; }
+        
+        .waterfall-card {
+            background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 25px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative;
+        }
+        /* 新增：答對時的綠色底色 */
+        .waterfall-card.card-correct {
+            background-color: #d4edda;
+            border-color: var(--correct-color);
+        }
+        /* 新增：答錯時的紅色底色 */
+        .waterfall-card.card-wrong {
+            background-color: #f8d7da;
+            border-color: var(--wrong-color);
+        }
+
+        .waterfall-card.locked { opacity: 0.9; }
+        .card-actions { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; }
+        .action-icon { cursor: pointer; font-size: 1.4em; transition: 0.2s; color: #bdc3c7; }
+        .action-icon.active { color: var(--favorite-color); }
+        .action-icon.trash:hover { color: var(--wrong-color); }
+
+        /* 修改點：瀑布流題目字體加大至 1.5em */
+        .wf-question-text { font-size: 1.5em; font-weight: bold; margin-bottom: 15px; padding-right: 60px; line-height: 1.5; color: #2c3e50; }
+        /* 修改點：題號改成紅底白字，並加強顯著性 */
+        .wf-q-badge { display: inline-block; background: var(--secondary-color); color: white; padding: 3px 10px; border-radius: 4px; font-size: 0.9em; font-weight: bold; margin-right: 8px; vertical-align: middle; }
+        .wf-img { max-width: 100%; max-height: 200px; display: block; margin: 10px 0; border-radius: 8px; border: 1px solid #eee; }
+        
+        .wf-options { display: grid; grid-template-columns: 1fr; gap: 8px; }
+        /* 修改點：瀑布流選項按鈕字體加大至 1.3em */
+        .wf-opt-btn {
+            padding: 12px; border: 2px solid #eee; background: #fff; border-radius: 8px;
+            text-align: left; cursor: pointer; font-size: 1.3em; transition: 0.2s;
+        }
+        .wf-opt-btn:hover:not(:disabled) { border-color: var(--quick-mode-color); background: var(--quick-mode-bg); }
+        .wf-opt-btn.correct { background: #d4edda; border-color: var(--correct-color); color: #155724; font-weight: bold;}
+        .wf-opt-btn.wrong { background: #f8d7da; border-color: var(--wrong-color); color: #721c24; }
+        
+        /* 修改點：瀑布流解析區塊加上色塊區隔 (淺黃色) */
         .wf-explanation {
-            margin-top: 15px; padding: 15px; background: #eaf2f8; border-radius: 8px; border-left: 5px solid #2980b9; display: none;
-            font-size: 1em; line-height: 1.5; color: #34495e;
+            margin-top: 20px; 
+            background: #fff9c4; /* 淺黃色背景，與白色卡片區分 */
+            padding: 20px; 
+            border-radius: 8px;
+            border: 1px solid #f9e79f;
+            border-left: 6px solid #f1c40f; /* 黃色左側強調線 */
+            font-size: 1.3em; 
+            color: #34495e;  /* 修改點：字體顏色改為深鐵藍灰色 */
+            display: none;
         }
 
-        /* --- 標準測驗樣式 (保留部分舊樣式) --- */
-        #quiz-content { display: none; }
-        .question-box { 
-            background-color: #FFF; border-left: 8px solid var(--primary-color); border: 1px solid #CCC; border-left-width: 8px;
-            padding: 20px; margin-bottom: 20px; border-radius: 5px; box-shadow: 3px 3px 10px rgba(0,0,0,0.1); position: relative;
-        }
-        .std-fav-btn { position: absolute; top: 15px; right: 15px; font-size: 1.5em; background:none; border:none; cursor:pointer; color:#ccc; }
-        .std-fav-btn.active { color: var(--favorite-color); }
+        /* --- Collection & History --- */
+        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+        .card-item { aspect-ratio: 2/3; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; cursor: pointer; position: relative; background: #fff;}
+        .card-item img { width: 100%; height: 100%; object-fit: cover; }
+        .card-item.locked img { filter: grayscale(100%) opacity(0.3); }
+        .card-item.locked { background: #f0f0f0; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #aaa; }
 
-        .question-img { max-width: 100%; max-height: 250px; object-fit: contain; display: block; margin: 15px auto; border: 5px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-radius: 5px; background: #eee; }
-        .option-btn { 
-            width: 100%; padding: 15px; margin: 10px 0; text-align: left; background: white; border: 2px solid #bdc3c7; border-radius: 10px; 
-            cursor: pointer; transition: 0.2s; font-size: 1.5em; line-height: 1.4; font-family: inherit; position: relative; color: #444;
-        }
-        .option-btn:hover { background-color: #ecf0f1; border-color: var(--primary-color); }
-        .option-btn.correct { background-color: #d4edda !important; border-color: var(--correct-color) !important; color: #155724; font-weight:bold; }
-        .option-btn.wrong { background-color: #f8d7da !important; border-color: var(--wrong-color) !important; color: #721c24; }
-        
-        /* 結算與其他頁面 */
-        #score-box, #history-screen, #collection-screen, #history-detail-screen { display: none; }
-        
-        /* 圖鑑 Grid */
-        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; padding: 10px; }
-        .card-item { position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.3); aspect-ratio: 2/3; cursor: pointer; transition: 0.3s; background: #ecf0f1; border: 4px solid #FFF; }
-        .card-item.locked { filter: grayscale(1); cursor: default; }
-        
-        /* Modal */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; }
-        .modal-content { background: #FFF; padding: 15px; border-radius: 10px; max-width: 90%; max-height: 90%; position: relative; text-align: center; border: 4px solid var(--secondary-color); }
-        .modal-img { max-width: 100%; max-height: 80vh; }
-        .modal-close { position: absolute; top: -15px; right: -15px; background: var(--wrong-color); color: white; border-radius: 50%; width: 30px; height: 30px; border: 2px solid white; cursor: pointer; font-weight: bold;}
+        /* --- Modal --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 20000; display: none; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 10px; max-width: 90%; max-height: 90%; position: relative; text-align: center; }
+        .modal-close { position: absolute; top: -15px; right: -15px; background: red; color: white; width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; cursor: pointer; font-weight: bold;}
 
+        /* RWD */
+        @media (max-width: 768px) {
+            #level-screen-content { flex-direction: column; }
+            .dashboard-std-zone { border-right: none; border-bottom: 1px solid #bdc3c7; }
+            .waterfall-header { flex-direction: column; align-items: flex-start; gap: 5px; }
+            .waterfall-stats { font-size: 0.9em; align-self: flex-end; }
+            .card-actions { top: 10px; right: 10px; }
+            /* Mobile Sticky Header Height Adjustment */
+            .waterfall-header { top: 60px; margin-top: -15px;} 
+            #music-player-bar { height: 60px; padding: 0 10px; }
+            body { padding-top: 80px; }
+            #yt-wrapper { display: none; position: fixed; bottom: 10px; right: 10px; width: 120px; height: 67px; top: auto; left: auto; transform: none; }
+            #yt-wrapper.mobile-visible { display: block; }
+        }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
-    <div class="quiz-container">
-        <audio id="bgm-player"></audio>
+
+    <!-- 音樂播放器 -->
+    <div id="music-player-bar">
+        <div class="player-left">
+            <div class="player-icon">🎵</div>
+        </div>
         
-        <!-- 歡迎頁面 -->
-        <div id="welcome-screen" class="fade-in">
-            <h1>國文：張釋之執法 選擇題大挑戰</h1>
-            <div style="font-size: 5em; margin: 30px; text-align:center;">⚖️📜🏛️🙇</div>
-            <p style="font-size: 1.5em; text-align: center; color: #2c3e50;">請輸入大名，準備進入漢代廷尉府！</p>
-            <div style="text-align:center;"><input type="text" id="username" placeholder="請輸入閣下尊姓大名..." /></div>
-            <div class="avatar-selection">
-                <img src="images/avatar_boy1.png" class="avatar-option selected" onerror="this.src='https://placehold.co/80?text=Boy1'" onclick="selectAvatar('avatar_boy1.png', this)">
-                <img src="images/avatar_boy2.png" class="avatar-option" onerror="this.src='https://placehold.co/80?text=Boy2'" onclick="selectAvatar('avatar_boy2.png', this)">
-                <img src="images/avatar_girl1.png" class="avatar-option" onerror="this.src='https://placehold.co/80?text=Girl1'" onclick="selectAvatar('avatar_girl1.png', this)">
-                <img src="images/avatar_girl2.png" class="avatar-option" onerror="this.src='https://placehold.co/80?text=Girl2'" onclick="selectAvatar('avatar_girl2.png', this)">
-            </div>
-            <div id="quick-login-area" class="quick-login-area"></div>
-            <br><br>
-            <div style="text-align:center;"><button class="btn" onclick="loginAndStart()">📜 擊鼓鳴冤 (開始)</button></div>
+        <div id="yt-wrapper">
+            <div id="yt-player"></div>
+            <div class="yt-overlay"></div>
         </div>
-
-        <!-- 儀表板 (Dashboard) - 需求 1 -->
-        <div id="level-screen" style="display: none;" class="fade-in">
-            <div class="dashboard-header">
-                <div class="user-info-display">
-                    <img id="user-avatar-display" src="" onerror="this.src='https://placehold.co/30?text=U'" style="width:40px; border-radius:50%; border:2px solid #555;">
-                    <span>廷尉：<strong id="display-name" style="color:#c0392b;"></strong></span>
-                </div>
-                <div>
-                    <button class="btn btn-sm btn-music" id="btn-music-main" onclick="toggleMusic()">🎵</button>
-                    <button class="btn btn-sm btn-gray" onclick="logout()">🚪 退堂</button>
-                </div>
-            </div>
-
-            <div class="dashboard-layout">
-                <!-- 左側：標準闖關模式 -->
-                <div class="section-standard">
-                    <span class="section-title">🧪 標準闖關模式 (70分及格)</span> <!-- 需求 14 -->
-                    <div id="level-grid" class="level-grid"></div>
-                    <div id="standard-resume-area" style="text-align:center; margin-top:10px; display:none;">
-                        <button class="btn btn-green" onclick="resumeStandardQuiz()">↪️ 繼續上次的闖關</button>
-                    </div>
+        
+        <div class="player-right">
+            <div class="player-controls">
+                <button class="ctrl-btn" onclick="prevTrack()">⏮</button>
+                <button id="main-play-btn" class="ctrl-btn" onclick="togglePlay()">▶</button>
+                <button class="ctrl-btn" onclick="nextTrack()">⏭</button>
+                
+                <div class="volume-container">
+                    <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="30" oninput="setVolume(this.value)">
                 </div>
 
-                <!-- 右側：極速刷題區 -->
-                <div class="section-speed">
-                    <span class="section-title">⚡ 極速刷題區</span>
-                    <p style="text-align:center; color: #555;">挑戰全範圍題目<br>瀑布流暢快體驗</p>
-                    <button class="btn btn-purple" style="font-size: 1.4em; width: 90%;" onclick="startWaterfallQuiz('speed')">🚀 開始刷題</button>
-                </div>
-            </div>
-
-            <div class="dashboard-footer">
-                <button id="btn-mistake" class="btn btn-red" onclick="startWaterfallQuiz('mistake')" style="display:none;">📕 案件重審 (<span id="mistake-count">0</span>)</button>
-                <button id="btn-favorite" class="btn btn-pink" onclick="startWaterfallQuiz('favorite')" style="display:none;">💖 刑律收藏 (<span id="favorite-count">0</span>)</button>
-                <button class="btn btn-blue" onclick="showCollection()">🎴 執法圖鑑</button>
-                <button class="btn btn-green" onclick="showHistory()">📜 審判紀錄</button>
+                <button id="toggle-video-btn" class="ctrl-btn active" onclick="toggleVideoDisplay()">👁️</button>
+                
+                <button id="mode-btn" class="mode-btn" onclick="changeMode()">
+                    <span id="mode-icon">🔁</span>
+                </button>
             </div>
         </div>
-
-        <!-- 標準測驗介面 (維持單題模式) -->
-        <div id="quiz-content" class="fade-in">
-            <div class="dashboard-header" style="border-bottom: 2px solid var(--primary-color);">
-                <h3 id="level-title" style="margin:0;">第 X 回</h3>
-                <div>
-                    <button class="btn btn-sm btn-music" id="btn-music-quiz" onclick="toggleMusic()">🎵</button>
-                    <button class="btn btn-gray btn-sm" onclick="exitQuiz()">🏠 離開</button>
-                </div>
-            </div>
-            <div class="progress-container"><div id="progress-bar" class="progress-bar"></div></div>
-            <div style="text-align: right; font-weight: bold;">卷宗: <span id="current-q-num">1</span> / <span id="total-q-num">20</span></div>
-            
-            <div id="question-container" class="fade-in">
-                <div class="question-box">
-                    <button id="std-fav-btn" class="std-fav-btn" onclick="toggleStandardFavorite()" title="加入收藏">❤</button>
-                    <div id="question-text" class="question-text">題目...</div>
-                    <img id="question-image" class="question-img" style="display: none;" />
-                </div>
-                <ul id="options-list" style="list-style: none; padding: 0;"></ul>
-            </div>
-            <div id="explanation" class="explanation-box" style="display: none;"><strong>💡 判決解析：</strong> <span id="explanation-text"></span></div>
-            <button id="next-btn" class="btn" style="display: none; width: 100%; margin-top: 25px;" onclick="nextQuestion()">下一題 ➡️</button>
-        </div>
-
-        <!-- 全新瀑布流刷題介面 (需求 2) -->
-        <div id="waterfall-screen" class="fade-in">
-            <div id="wf-header" class="sticky-header">
-                <span id="wf-title" style="font-size:1.2em; font-weight:bold;">極速刷題</span>
-                <div class="wf-progress-container">
-                    <div id="wf-progress-bar" class="wf-progress-bar"></div>
-                </div>
-                <div class="wf-score-board">
-                    ✅ <span id="wf-score">0</span> / <span id="wf-total">0</span>
-                </div>
-                <button class="btn btn-sm" style="background:rgba(0,0,0,0.2); margin-left:10px;" onclick="exitWaterfall()">🏠 離開</button>
-            </div>
-            <div id="wf-list" class="wf-list">
-                <!-- 題目卡片會動態插入這裡 -->
-            </div>
-            <div style="text-align:center; padding-bottom:30px;">
-                <p style="color:#7f8c8d;">- 卷宗已盡 -</p>
-                <button class="btn btn-gray" onclick="exitWaterfall()">返回地圖</button>
-            </div>
-        </div>
-
-        <!-- 結算畫面 (標準模式用) -->
-        <div id="score-box" class="fade-in" style="text-align: center;">
-            <h2 style="color: #2c3e50;">🎉 審判完成！</h2>
-            <p style="font-size: 2em; color: #34495e;">廷尉：<span id="final-name"></span></p>
-            <p style="font-size: 4em; color: #c0392b; margin: 10px 0;"><span id="final-score"></span> 分</p>
-            <div id="score-comment" style="font-size: 1.5em; margin-bottom: 25px; color: #e67e22;"></div>
-            <div id="unlock-msg" style="color: var(--correct-color); font-weight: bold; display:none; margin-bottom: 15px; font-size: 1.5em;">🔓 下一回審判已開啟！</div>
-            <button class="btn" onclick="goToLevelScreen()">🗺️ 返回地圖</button>
-        </div>
-
-        <!-- 歷史、圖鑑、Modal 等保留原樣 -->
-        <div id="history-screen" class="fade-in">
-            <h2>📜 歷代廷尉榜 (紀錄)</h2>
-            <ul id="history-list"></ul>
-            <div style="text-align: center;"><button class="btn" onclick="goToLevelScreen()">🗺️ 返回地圖</button></div>
-        </div>
-        <div id="history-detail-screen" class="fade-in">
-            <h3>📜 歷史卷宗回顧</h3>
-            <ul id="history-review-list" class="review-list"></ul>
-            <div style="text-align:center;"><button class="btn" onclick="showHistory()">⬅️ 返回列表</button></div>
-        </div>
-        <div id="collection-screen" class="fade-in">
-            <h2>🎴 執法圖鑑</h2>
-            <div id="collection-grid" class="collection-grid"></div>
-            <div style="text-align:center; margin-top:20px;"><button class="btn" onclick="goToLevelScreen()">🗺️ 返回地圖</button></div>
-        </div>
-        <div id="card-modal" class="modal-overlay" onclick="closeCardModal()">
-            <div class="modal-content" onclick="event.stopPropagation()">
-                <button class="modal-close" onclick="closeCardModal()">×</button>
-                <img id="modal-img" class="modal-img" src="">
-                <h3 id="modal-title" style="margin-top:10px;"></h3>
-            </div>
-        </div>
-
     </div>
 
+    <!-- 歡迎畫面 -->
+    <div id="welcome-screen" class="container-box fade-in">
+        <h1>國文第3冊：L7張釋之執法</h1>
+        <div style="font-size: 4em; text-align: center; margin: 20px;">📜🖊️🏮🎋</div>
+        <p style="text-align: center; font-size: 1.2em;">請輸入雅號，準備進行課文考核！</p>
+        
+        <div style="text-align:center;">
+            <input type="text" id="username" placeholder="請輸入學子雅號..." />
+        </div>
+        
+        <div class="avatar-selection">
+            <img src="images/Chris.png" class="avatar-option selected" onclick="selectAvatar('Chris.png', this)">
+            <img src="images/Louis.png" class="avatar-option" onclick="selectAvatar('Louis.png', this)">
+        </div>
+
+        <div id="quick-login-area" class="quick-login-area"></div>
+
+        <div style="text-align:center; margin-top: 30px;">
+            <button class="btn" onclick="loginAndStart()">🚀 進入講堂</button>
+        </div>
+    </div>
+
+    <!-- 儀表板 (Level Screen) -->
+    <div id="level-screen" class="container-box fade-in" style="display: none;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img id="user-avatar-display" src="" style="width:40px; height:40px; border-radius:50%; vertical-align:middle; border:2px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+            <span style="font-size: 1.2em; font-weight: bold; margin-left: 10px;">學子：<span id="display-name" style="color:var(--primary-color);"></span></span>
+        </div>
+
+        <div id="level-screen-content">
+            <!-- 左側：標準實驗區 -->
+            <div class="dashboard-std-zone">
+                <div class="dashboard-title">📖 經典研讀模式</div>
+                <div id="level-grid" class="level-grid"></div>
+            </div>
+
+            <!-- 右側：極速刷題區 -->
+            <div class="dashboard-speed-zone">
+                <div class="speed-title">⚡ 博古通今區</div>
+                <p style="color:#666; font-size:0.9em; text-align:center; margin-bottom: 10px;">不分卷數，瀑布流快速複習</p>
+                <button class="speed-big-btn" onclick="startWaterfallQuiz('speed')">🚀 開始考核 (全範圍)</button>
+            </div>
+        </div>
+
+        <!-- 底部工具列 -->
+        <div class="dashboard-tools">
+            <button id="btn-mistake" class="btn btn-red" onclick="startWaterfallQuiz('mistake')" style="display:none;">📕 錯題修訂 (<span id="mistake-count">0</span>)</button>
+            <button id="btn-favorite" class="btn btn-pink" onclick="startWaterfallQuiz('favorite')" style="display:none;">⭐ 佳句收藏 (<span id="favorite-count">0</span>)</button>
+            <button class="btn btn-blue" onclick="showCollection()">📚 文獻圖鑑</button>
+            <button class="btn btn-green" onclick="showHistory()">🏆 金榜題名</button>
+            <button class="btn btn-gray" onclick="logout()">🚪 告退</button>
+        </div>
+    </div>
+
+    <!-- 標準測驗介面 (Single Question) -->
+    <div id="quiz-content" class="container-box fade-in" style="display: none;">
+        <div class="quiz-header">
+            <h3 id="level-title" style="margin:0; color:var(--primary-color);">試煉 X</h3>
+            <div style="display:flex; gap:10px;">
+                <button id="std-fav-btn" class="btn btn-sm" style="background:#fff; border:2px solid var(--favorite-color); color:var(--favorite-color); padding: 5px 10px;" onclick="toggleStandardFavorite()">☆</button>
+                <button class="btn btn-orange btn-sm" style="padding: 5px 10px;" onclick="restartQuiz()">🔄 重新開始</button>
+                <button class="btn btn-gray btn-sm" style="padding: 5px 10px;" onclick="exitQuiz()">🏠 離開</button>
+            </div>
+        </div>
+        
+        <div class="progress-bar-container">
+            <div id="progress-bar" class="progress-bar-fill"></div>
+        </div>
+        <div style="text-align: right; margin-bottom: 10px; font-weight: bold; color: #777;">
+            進度: <span id="current-q-num">1</span> / <span id="total-q-num">20</span>
+        </div>
+
+        <div id="question-container">
+            <div class="question-box">
+                <div id="question-text">題目載入中...</div>
+                <img id="question-image" style="max-width:100%; max-height:250px; display:none; margin-top:15px; border-radius:5px;">
+            </div>
+            <ul id="options-list" class="option-list"></ul>
+        </div>
+        
+        <div id="explanation" class="explanation-box">
+            <strong>💡 解析：</strong> <span id="explanation-text"></span>
+        </div>
+
+        <button id="next-btn" class="btn" style="display: none; width: 100%; margin-top: 20px;" onclick="nextQuestion()">下一試煉 ➡️</button>
+    </div>
+
+    <!-- 瀑布流刷題介面 (Waterfall) -->
+    <div id="waterfall-screen" class="container-box fade-in">
+        <div class="waterfall-header">
+            <div class="waterfall-title">
+                <span id="wf-mode-icon">⚡</span> <span id="wf-mode-title">博古通今</span>
+            </div>
+            <div class="waterfall-stats">
+                已答: <span id="wf-answered" style="color:var(--primary-color)">0</span> / <span id="wf-total">0</span>
+                &nbsp;|&nbsp; 得分: <span id="wf-score" style="color:var(--correct-color)">0</span>
+            </div>
+            <div style="display:flex; gap: 5px;">
+                <button class="btn btn-orange btn-sm" onclick="restartQuiz()">🔄 重新開始</button>
+                <button class="btn btn-gray btn-sm" onclick="exitQuiz()">🏠 結束</button>
+            </div>
+        </div>
+        
+        <div id="waterfall-list">
+            <!-- 題目卡片將由 JS 生成 -->
+        </div>
+    </div>
+
+    <!-- 結算畫面 -->
+    <div id="score-box" class="container-box fade-in" style="display: none; text-align: center;">
+        <h2 style="color: var(--primary-color);">🎉 考核結果</h2>
+        <p style="font-size: 1.5em; margin: 10px;">學子：<span id="final-name"></span></p>
+        <div style="font-size: 4em; font-weight: bold; color: var(--accent-color); margin: 20px 0;">
+            <span id="final-score">0</span> <span style="font-size:0.4em; color:#777;">分</span>
+        </div>
+        <div id="score-comment" style="font-size: 1.2em; color: #e67e22; margin-bottom: 20px;"></div>
+        
+        <div id="unlock-msg" style="display:none; color:var(--correct-color); font-weight:bold; font-size:1.2em; margin-bottom:15px;">🔓 下一卷權限解鎖！</div>
+        <div id="new-card-alert" style="display:none; background:#fdf2e9; padding:10px; border-radius:10px; border:2px solid var(--secondary-color); margin-bottom:20px;">✨ 習得新知識！快去圖鑑查看！</div>
+
+        <div style="display: flex; justify-content: center; gap: 15px;">
+            <button class="btn" onclick="goToDashboard()">🗺️ 返回總覽</button>
+        </div>
+    </div>
+
+    <!-- 其他畫面 (History, Collection) -->
+    <div id="history-screen" class="container-box fade-in" style="display: none;">
+        <h2>🏆 金榜題名</h2>
+        <ul id="history-list" style="list-style: none; padding: 0;"></ul>
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="btn" onclick="goToDashboard()">🗺️ 返回</button>
+        </div>
+    </div>
+    
+    <div id="collection-screen" class="container-box fade-in" style="display: none;">
+        <h2>📚 文獻圖鑑 (需達80分)</h2>
+        <div id="collection-grid" class="collection-grid"></div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="btn" onclick="goToDashboard()">🗺️ 返回</button>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="card-modal" class="modal-overlay" onclick="closeCardModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeCardModal()">×</button>
+            <img id="modal-img" src="" style="max-width:100%; max-height:80vh; border-radius:5px;">
+            <h3 id="modal-title" style="margin-top:10px; color:#333;"></h3>
+        </div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
     <script>
-        // 🟢 系統設定
-        const LEVEL_CONFIG = [5]; // 測試用，實際應更多
-        const PASS_SCORE = 70; // 需求 14
-        const PLAYLIST = ['sounds/bgm1.mp3', 'sounds/bgm2.mp3', 'sounds/bgm3.mp3'];
-        const APP_PREFIX = 'zhang_'; 
-
-        // 🟢 狀態變數
-        let allQuestions = [];
-        let userName = "", currentAvatar = "avatar_boy1.png";
+        // 設定與全域變數
+        // 修改點 2: 總題數 170 題，分為 9 關 (8*20 + 1*10)
+        const LEVEL_CONFIG = [20, 20, 20, 20, 20, 20, 20, 20, 10];
+        // 影片播放清單
+        const YOUTUBE_PLAYLIST = ['aGZk0nEBWv4', 'advioIb8-gE'];
+        // 修改點 3: LocalStorage 前綴改為 zhang_
+        const APP_PREFIX = 'zhang_';
         
-        // 標準模式變數
-        let stdQuestions = [], stdIndex = 0, stdScore = 0, stdLevel = 1, stdAnswers = {};
+        let player, isPlayerReady = false, isPlaying = false;
+        let allQuestions = [], currentQuizData = [];
+        let userName = "", currentAvatar = "Chris.png";
         
-        // 瀑布流模式變數
-        let wfQuestions = [], wfState = {}; // { qId: { answered: bool, correct: bool, userOption: str } }
-        let wfMode = ""; // 'speed', 'mistake', 'favorite'
-
-        // 音效
-        let audioCorrect = new Audio('sounds/correct.mp3'); audioCorrect.volume = 0.4;
-        let audioFail = new Audio('sounds/fail.mp3'); audioFail.volume = 0.4;
-        const bgmPlayer = document.getElementById('bgm-player');
-        bgmPlayer.volume = 0.3; bgmPlayer.onended = nextTrack;
-        let currentTrackIndex = 0; let isPlaying = false;
-
-        // 內嵌題目 (模擬 questions.json)
-        const embeddedQuestions = [
-            { "id": 1, "question": "張釋之在《張釋之執法》一文中，擔任什麼官職？", "options": ["(A) 廷尉", "(B) 丞相", "(C) 縣令", "(D) 將軍"], "answer": "(A) 廷尉", "explanation": "張釋之時任廷尉，負責掌管全國刑獄。" },
-            { "id": 2, "question": "犯蹕之人最後被判處什麼刑罰？", "options": ["(A) 死刑", "(B) 流放", "(C) 罰金", "(D) 勞役"], "answer": "(C) 罰金", "explanation": "依律，犯蹕者處以罰金四兩。" },
-            { "id": 3, "question": "漢文帝對原本的判決感到如何？", "options": ["(A) 欣然接受", "(B) 怒不可遏", "(C) 不置可否", "(D) 悲痛欲絕"], "answer": "(B) 怒不可遏", "explanation": "文帝認為犯人驚擾御馬，罰金太輕，因而大怒。" },
-            { "id": 4, "question": "張釋之認為「法」對於天下人來說具有什麼意義？", "options": ["(A) 帝王的工具", "(B) 懲罰的手段", "(C) 天下之平", "(D) 貴族的特權"], "answer": "(C) 天下之平", "explanation": "張釋之言：「廷尉，天下之平也。」" },
-            { "id": 5, "question": "文中「廷尉，天下之平也」的「平」字意思為何？", "options": ["(A) 平坦", "(B) 平靜", "(C) 標準", "(D) 平凡"], "answer": "(C) 標準", "explanation": "此處「平」指執法的標準。" }
-        ];
-
-        // 初始化
-        window.onload = function() {
-            // 模擬讀取
-            setTimeout(() => { allQuestions = embeddedQuestions; renderQuickLogin(); }, 100);
+        // 影片索引追蹤
+        let currentVideoIdx = 0;
+        
+        // 測驗狀態
+        let quizState = {
+            mode: 'standard', // standard, speed, mistake, favorite
+            level: 1,
+            score: 0,
+            currentIndex: 0,
+            answers: {}, // { qId: selectedOption }
+            locked: {}   // 瀑布流模式下鎖定的題目 ID
         };
 
-        // --- 輔助函式 ---
+        const audioCorrect = new Audio('sounds/correct.mp3'); audioCorrect.volume = 0.4;
+        const audioFail = new Audio('sounds/fail.mp3'); audioFail.volume = 0.4;
+
+        // --- 初始化 ---
+        fetch('questions.json').then(res => res.json())
+            .then(data => { allQuestions = data; renderQuickLogin(); })
+            .catch(e => console.error("Error loading questions:", e));
+
         function getUserKey(key) { return APP_PREFIX + userName + '_' + key; }
-        function getLetter(str) { const m = str && str.match(/[A-Za-z]/); return m ? m[0].toUpperCase() : ""; }
-        
-        // --- 音樂 ---
-        function playMusic() { if(PLAYLIST.length===0)return; bgmPlayer.src = PLAYLIST[currentTrackIndex]; bgmPlayer.play().then(() => { isPlaying = true; updateMusicButtons(); }).catch(e=>{}); }
-        function toggleMusic() { if (bgmPlayer.paused) { if(!bgmPlayer.src) bgmPlayer.src=PLAYLIST[currentTrackIndex]; bgmPlayer.play(); isPlaying = true; } else { bgmPlayer.pause(); isPlaying = false; } updateMusicButtons(); }
-        function nextTrack() { currentTrackIndex = (currentTrackIndex + 1) % PLAYLIST.length; playMusic(); }
-        function updateMusicButtons() { 
-            const btns = document.querySelectorAll('.btn-music');
-            btns.forEach(btn => {
-                if (isPlaying) { btn.classList.add('playing'); btn.style.opacity = '1'; } else { btn.classList.remove('playing'); btn.style.opacity = '0.7'; }
-            });
+
+        // --- 登入與導航 ---
+        function selectAvatar(img, el) {
+            currentAvatar = img;
+            document.querySelectorAll('.avatar-option').forEach(e => e.classList.remove('selected'));
+            el.classList.add('selected');
         }
 
-        // --- 登入系統 ---
-        function selectAvatar(filename, element) { currentAvatar = filename; document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected')); element.classList.add('selected'); }
-        function getSavedUsers() { return JSON.parse(localStorage.getItem(APP_PREFIX + 'savedUsers')) || []; }
-        function renderQuickLogin() {
-            let users = getSavedUsers(); let container = document.getElementById('quick-login-area'); container.innerHTML = "";
-            if(users.length > 0) { 
-                container.innerHTML = '<div style="width:100%; text-align:center; color:#2c3e50; font-size:0.9em;">-- 舊雨重逢 --</div>'; 
-                users.forEach(u => { 
-                    let div = document.createElement('div'); 
-                    div.innerHTML = `<span class="user-tag" onclick="quickLogin('${u.name}', '${u.avatar}')"><img src="images/${u.avatar}" onerror="this.src='https://placehold.co/20?text=U'" style="width:20px; border-radius:50%;">${u.name}<span class="delete-user" onclick="event.stopPropagation(); deleteUser('${u.name}')">×</span></span>`; 
-                    container.appendChild(div); 
-                }); 
+        function loginAndStart() {
+            const name = document.getElementById('username').value.trim();
+            if(!name) return alert('請輸入雅號');
+            userName = name;
+            saveUser();
+            if(isPlayerReady && !isPlaying) player.playVideo();
+            goToDashboard();
+        }
+
+        function saveUser() {
+            let users = JSON.parse(localStorage.getItem(APP_PREFIX+'savedUsers')) || [];
+            if(!users.some(u => u.name === userName)) {
+                users.push({name: userName, avatar: currentAvatar});
+                localStorage.setItem(APP_PREFIX+'savedUsers', JSON.stringify(users));
             }
         }
-        function quickLogin(name, avatar) { document.getElementById('username').value = name; currentAvatar = avatar; loginAndStart(); }
-        function deleteUser(name) { 
-            if (!confirm(`刪除「${name}」？`)) return; 
-            // 清除該使用者的所有存檔
-            ['mistakeBank','favoriteBank','quizHistory','quizProgress','save_std','save_speed','save_mistake','save_favorite'].forEach(k => {
-                localStorage.removeItem(APP_PREFIX + name + '_' + k);
-            });
-            let users = getSavedUsers().filter(u => u.name !== name); 
-            localStorage.setItem(APP_PREFIX + 'savedUsers', JSON.stringify(users)); 
-            renderQuickLogin(); 
-        }
-        function loginAndStart() { 
-            const inputName = document.getElementById('username').value.trim(); 
-            if (!inputName) { alert("請留下大名！"); return; } 
-            userName = inputName; 
-            
-            // 儲存使用者
-            let users = getSavedUsers().filter(u => u.name !== userName); 
-            users.push({ name: userName, avatar: currentAvatar }); 
-            localStorage.setItem(APP_PREFIX + 'savedUsers', JSON.stringify(users)); 
-            
-            if (!isPlaying) playMusic(); 
-            goToLevelScreen(); 
-        }
-        function logout() { location.reload(); }
-
-        // --- 儀表板與地圖 (需求 1) ---
-        function getProgress() { return JSON.parse(localStorage.getItem(getUserKey('quizProgress'))) || { maxLevel: 1, levelScores: {} }; }
         
-        function goToLevelScreen() {
+        function renderQuickLogin() {
+            const users = JSON.parse(localStorage.getItem(APP_PREFIX+'savedUsers')) || [];
+            const container = document.getElementById('quick-login-area');
+            container.innerHTML = users.map(u => `
+                <div class="user-tag" onclick="quickLogin('${u.name}', '${u.avatar}')">
+                    <img src="images/${u.avatar}" style="width:20px;height:20px;border-radius:50%;">${u.name}
+                    <span class="delete-user" onclick="event.stopPropagation();deleteUser('${u.name}')">×</span>
+                </div>
+            `).join('');
+        }
+
+        function quickLogin(name, av) {
+            document.getElementById('username').value = name;
+            currentAvatar = av;
+            loginAndStart();
+        }
+
+        function deleteUser(name) {
+            if(!confirm(`刪除 ${name} 的所有資料？`)) return;
+            localStorage.removeItem(APP_PREFIX + name + '_mistakeBank');
+            localStorage.removeItem(APP_PREFIX + name + '_favoriteBank');
+            localStorage.removeItem(APP_PREFIX + name + '_quizHistory');
+            localStorage.removeItem(APP_PREFIX + name + '_quizProgress');
+            localStorage.removeItem(APP_PREFIX + name + '_standardProgress');
+            // 移除所有模式的瀑布流進度
+            localStorage.removeItem(APP_PREFIX + name + '_waterfallProgress_speed');
+            localStorage.removeItem(APP_PREFIX + name + '_waterfallProgress_mistake');
+            localStorage.removeItem(APP_PREFIX + name + '_waterfallProgress_favorite');
+            
+            let users = JSON.parse(localStorage.getItem(APP_PREFIX+'savedUsers')) || [];
+            localStorage.setItem(APP_PREFIX+'savedUsers', JSON.stringify(users.filter(u => u.name !== name)));
+            renderQuickLogin();
+        }
+
+        function goToDashboard() {
             hideAllScreens();
             document.getElementById('level-screen').style.display = 'block';
             document.getElementById('display-name').innerText = userName;
             document.getElementById('user-avatar-display').src = "images/" + currentAvatar;
             
             renderLevelGrid();
-            updateMistakeButton();
-            updateFavoriteButton();
-            
-            // 檢查標準模式存檔 (需求 4)
-            const savedStd = localStorage.getItem(getUserKey('save_std'));
-            document.getElementById('standard-resume-area').style.display = savedStd ? 'block' : 'none';
+            updateDashboardTools();
         }
 
+        function hideAllScreens() {
+            document.querySelectorAll('.container-box').forEach(el => el.style.display = 'none');
+        }
+
+        // --- 標準實驗模式 (Standard Mode) ---
         function renderLevelGrid() {
-            const grid = document.getElementById('level-grid'); grid.innerHTML = "";
-            const progress = getProgress();
+            const grid = document.getElementById('level-grid');
+            grid.innerHTML = "";
+            const progress = JSON.parse(localStorage.getItem(getUserKey('quizProgress'))) || { maxLevel: 1, scores: {} };
             
-            for(let i=1; i <= LEVEL_CONFIG.length; i++) {
-                let btn = document.createElement('div');
-                btn.className = 'level-btn-simple';
-                let isLocked = i > progress.maxLevel;
-                let score = progress.levelScores[i];
-                let scoreText = score !== undefined ? `<span style="color:${score>=PASS_SCORE?'var(--correct-color)':'var(--wrong-color)'}">${score}分</span>` : "未完成";
+            LEVEL_CONFIG.forEach((_, idx) => {
+                const level = idx + 1;
+                const btn = document.createElement('button');
+                btn.className = 'level-grid-btn';
                 
-                if (isLocked) {
-                    btn.setAttribute('disabled', 'true');
-                    btn.className += ' disabled';
-                    btn.innerHTML = `<span class="level-num">🔒 ${i}</span><span class="level-status">待解鎖</span>`;
+                if (level <= progress.maxLevel) {
+                    const score = progress.scores[level];
+                    let icon = '📖'; // 修改點：更換圖示
+                    if (score >= 90) icon = '💮';
+                    else if (score >= 70) icon = '🔖';
+                    
+                    // 修改點：文字改為「卷」
+                    btn.innerHTML = `<div class="lvl-icon">${icon}</div><div class="lvl-label">卷 ${level}</div>${score !== undefined ? `<div class="lvl-score">${score}分</div>` : ''}`;
+                    btn.onclick = () => startStandardQuiz(level);
                 } else {
-                    btn.onclick = () => startStandardQuiz(i);
-                    let icon = score >= PASS_SCORE ? '🚩' : '🏳️';
-                    btn.innerHTML = `<span class="level-num">${icon} ${i}</span><span class="level-status">${scoreText}</span>`;
+                    btn.disabled = true;
+                    // 修改點：文字改為「卷」
+                    btn.innerHTML = `<div class="lvl-icon" style="filter:grayscale(1);">🔒</div><div class="lvl-label">卷 ${level}</div>`;
                 }
                 grid.appendChild(btn);
+            });
+        }
+
+        function startStandardQuiz(level, forceNew = false) {
+            const savedKey = getUserKey('standardProgress');
+            if(!forceNew) {
+                const saved = JSON.parse(localStorage.getItem(savedKey));
+                if(saved && saved.level === level) {
+                     // 自動恢復進度
+                     quizState = saved;
+                     currentQuizData = allQuestions.filter(q => quizState.qIds.includes(q.id));
+                     loadStandardUI();
+                     return;
+                }
             }
-        }
-
-        function getMistakeBank() { return JSON.parse(localStorage.getItem(getUserKey('mistakeBank'))) || []; }
-        function getFavoriteBank() { return JSON.parse(localStorage.getItem(getUserKey('favoriteBank'))) || []; }
-        function updateMistakeButton() { 
-            let count = getMistakeBank().length; 
-            let btn = document.getElementById('btn-mistake');
-            btn.style.display = count > 0 ? 'inline-block' : 'none';
-            document.getElementById('mistake-count').innerText = count;
-        }
-        function updateFavoriteButton() {
-            let count = getFavoriteBank().length;
-            let btn = document.getElementById('btn-favorite');
-            btn.style.display = count > 0 ? 'inline-block' : 'none';
-            document.getElementById('favorite-count').innerText = count;
-        }
-
-        // --- 標準模式 (單題邏輯) ---
-        function startStandardQuiz(levelNum) {
-            stdLevel = levelNum;
-            // 載入題目
-            // 簡單處理：假設每關5題，這裡用 slice 模擬
-            let start = (levelNum-1) * 5;
-            let end = start + 5;
-            if(end > allQuestions.length) end = allQuestions.length;
             
-            stdQuestions = allQuestions.slice(start, end);
-            if(stdQuestions.length === 0) { alert("無題目"); return; }
+            // 開始新測驗 (或覆蓋舊的)
+            let startIdx = 0;
+            for(let i=0; i<level-1; i++) startIdx += LEVEL_CONFIG[i];
+            let endIdx = startIdx + LEVEL_CONFIG[level-1];
             
-            // 重置狀態
-            stdIndex = 0; stdScore = 0; stdAnswers = {};
-            localStorage.removeItem(getUserKey('save_std')); // 清除舊檔
+            quizState = {
+                mode: 'standard',
+                level: level,
+                score: 0,
+                currentIndex: 0,
+                answers: {},
+                locked: {},
+                qIds: allQuestions.slice(startIdx, endIdx).map(q => q.id)
+            };
             
-            showStandardUI();
-            loadStandardQuestion();
+            currentQuizData = allQuestions.filter(q => quizState.qIds.includes(q.id));
+            if(currentQuizData.length === 0) return alert('無題目數據');
+            
+            loadStandardUI();
         }
 
-        function resumeStandardQuiz() {
-            const saved = JSON.parse(localStorage.getItem(getUserKey('save_std')));
-            if(!saved) return;
-            stdQuestions = saved.questions;
-            stdIndex = saved.index;
-            stdScore = saved.score;
-            stdAnswers = saved.answers;
-            stdLevel = saved.level;
-            showStandardUI();
-            loadStandardQuestion();
-        }
-
-        function showStandardUI() {
+        function loadStandardUI() {
             hideAllScreens();
             document.getElementById('quiz-content').style.display = 'block';
-            document.getElementById('level-title').innerText = `第 ${stdLevel} 回`;
+            // 修改點：文字改為「卷」
+            document.getElementById('level-title').innerText = `🔖 卷 ${quizState.level}`;
+            document.getElementById('total-q-num').innerText = currentQuizData.length;
+            loadStandardQuestion();
         }
 
         function loadStandardQuestion() {
-            const q = stdQuestions[stdIndex];
-            document.getElementById('progress-bar').style.width = ((stdIndex / stdQuestions.length) * 100) + "%";
-            document.getElementById('current-q-num').innerText = stdIndex + 1;
-            document.getElementById('total-q-num').innerText = stdQuestions.length;
+            const qData = currentQuizData[quizState.currentIndex];
+            if(!qData) return finishStandardQuiz();
             
-            // 處理標題 (移除 1. 1. 格式 - 需求 2)
-            let qText = q.question.replace(/^\d+[\.\、]\s*/, '').replace(/^\d+\s+/, ''); 
-            document.getElementById('question-text').innerText = qText;
+            // Auto Save
+            localStorage.setItem(getUserKey('standardProgress'), JSON.stringify(quizState));
+
+            document.getElementById('current-q-num').innerText = quizState.currentIndex + 1;
+            document.getElementById('progress-bar').style.width = ((quizState.currentIndex) / currentQuizData.length * 100) + '%';
             
-            const img = document.getElementById('question-image');
-            if(q.image) { img.src = q.image; img.style.display = 'block'; } else img.style.display = 'none';
+            document.getElementById('question-text').innerText = qData.question;
+            const imgEl = document.getElementById('question-image');
+            imgEl.style.display = qData.image ? 'block' : 'none';
+            if(qData.image) imgEl.src = qData.image;
 
-            // 愛心狀態
-            updateStandardHeartBtn(q.id);
-
-            const list = document.getElementById('options-list'); list.innerHTML = "";
-            document.getElementById('explanation').style.display = 'none';
-            document.getElementById('next-btn').style.display = 'none';
-
-            // 檢查是否已作答 (Resume 情況)
-            let answeredOpt = stdAnswers[q.id];
+            const list = document.getElementById('options-list');
+            list.innerHTML = "";
             
-            q.options.forEach(opt => {
-                let li = document.createElement('li');
-                let btn = document.createElement('button');
+            const isAnswered = quizState.answers[qData.id] !== undefined;
+            const userAns = quizState.answers[qData.id];
+
+            qData.options.forEach(opt => {
+                const btn = document.createElement('button');
                 btn.className = 'option-btn';
                 btn.innerText = opt;
                 
-                if (answeredOpt) {
+                if(isAnswered) {
                     btn.disabled = true;
-                    if(getLetter(opt) === getLetter(q.answer)) btn.classList.add('correct');
-                    if(opt === answeredOpt && getLetter(opt) !== getLetter(q.answer)) btn.classList.add('wrong');
+                    const optCode = opt.substring(0,3);
+                    const ansCode = qData.answer.substring(0,3);
+                    if(optCode === ansCode) btn.classList.add('correct');
+                    if(optCode === userAns.substring(0,3) && optCode !== ansCode) btn.classList.add('wrong');
                 } else {
-                    btn.onclick = () => checkStandardAnswer(btn, opt, q);
+                    btn.onclick = () => handleStandardAnswer(btn, opt, qData);
                 }
-                li.appendChild(btn);
-                list.appendChild(li);
+                list.appendChild(btn);
             });
-
-            if(answeredOpt) {
-                document.getElementById('explanation-text').innerText = q.explanation;
-                document.getElementById('explanation').style.display = 'block';
+            
+            const expBox = document.getElementById('explanation');
+            if(isAnswered) {
+                document.getElementById('explanation-text').innerText = qData.explanation || "略";
+                expBox.style.display = 'block';
                 document.getElementById('next-btn').style.display = 'block';
+            } else {
+                expBox.style.display = 'none';
+                document.getElementById('next-btn').style.display = 'none';
             }
             
-            // 自動存檔 (需求 4)
-            saveStandardProgress();
+            updateStandardFavoriteUI(qData.id);
         }
 
-        function checkStandardAnswer(btn, opt, q) {
-            stdAnswers[q.id] = opt;
-            const isCorrect = getLetter(opt) === getLetter(q.answer);
-            const btns = document.querySelectorAll('#quiz-content .option-btn');
-            btns.forEach(b => {
-                b.disabled = true;
-                if(getLetter(b.innerText) === getLetter(q.answer)) b.classList.add('correct');
-            });
-
-            if(isCorrect) {
-                btn.classList.add('correct'); stdScore++; audioCorrect.play().catch(()=>{});
-                confetti({ particleCount: 50, spread: 50, origin: { y: 0.7 } });
-            } else {
-                btn.classList.add('wrong'); audioFail.play().catch(()=>{});
-                addToBank('mistakeBank', q.id); // 錯題自動加入
-            }
-
-            document.getElementById('explanation-text').innerText = q.explanation;
-            document.getElementById('explanation').style.display = 'block';
-            document.getElementById('next-btn').style.display = 'block';
+        function handleStandardAnswer(btn, option, qData) {
+            quizState.answers[qData.id] = option;
+            const correct = qData.answer.substring(0,3);
+            const selected = option.substring(0,3);
             
-            saveStandardProgress();
+            if(selected === correct) {
+                quizState.score++;
+                audioCorrect.play().catch(()=>{});
+                confetti({ particleCount: 50, origin: { y: 0.8 } });
+            } else {
+                audioFail.play().catch(()=>{});
+                addToMistake(qData.id);
+            }
+            
+            // Re-render to show colors and explanation
+            loadStandardQuestion();
         }
 
         function nextQuestion() {
-            stdIndex++;
-            if(stdIndex < stdQuestions.length) {
-                loadStandardQuestion();
-            } else {
-                finishStandardQuiz();
-            }
+            quizState.currentIndex++;
+            loadStandardQuestion();
         }
 
         function finishStandardQuiz() {
-            hideAllScreens();
+            localStorage.removeItem(getUserKey('standardProgress')); // Clear save
+            document.getElementById('quiz-content').style.display = 'none';
             document.getElementById('score-box').style.display = 'block';
             
-            let finalScore = Math.round((stdScore / stdQuestions.length) * 100);
+            const finalScore = Math.round((quizState.score / currentQuizData.length) * 100);
             document.getElementById('final-score').innerText = finalScore;
             document.getElementById('final-name').innerText = userName;
             
-            let comment = finalScore >= PASS_SCORE ? "審判合格！" : "尚需努力！";
-            document.getElementById('score-comment').innerText = comment;
+            // Progress logic
+            let progress = JSON.parse(localStorage.getItem(getUserKey('quizProgress'))) || { maxLevel: 1, scores: {} };
+            let oldScore = progress.scores[quizState.level] || 0;
+            if(finalScore > oldScore) progress.scores[quizState.level] = finalScore;
             
-            // 儲存進度
-            let progress = getProgress();
-            if(!progress.levelScores[stdLevel] || finalScore > progress.levelScores[stdLevel]) {
-                progress.levelScores[stdLevel] = finalScore;
-            }
-            if(finalScore >= PASS_SCORE && stdLevel === progress.maxLevel && stdLevel < LEVEL_CONFIG.length) {
+            let unlocked = false;
+            if(finalScore >= 70 && quizState.level === progress.maxLevel && quizState.level < LEVEL_CONFIG.length) {
                 progress.maxLevel++;
-                document.getElementById('unlock-msg').style.display = 'block';
-            } else {
-                document.getElementById('unlock-msg').style.display = 'none';
+                unlocked = true;
             }
             localStorage.setItem(getUserKey('quizProgress'), JSON.stringify(progress));
             
-            // 存歷史紀錄
-            saveHistoryRecord(`第 ${stdLevel} 回`, finalScore, stdQuestions, stdAnswers);
+            document.getElementById('unlock-msg').style.display = unlocked ? 'block' : 'none';
+            document.getElementById('new-card-alert').style.display = (finalScore >= 70 && oldScore < 70) ? 'block' : 'none';
             
-            // 清除中斷存檔
-            localStorage.removeItem(getUserKey('save_std'));
+            // Score Comment
+            let cmt = "再接再厲！";
+            if(finalScore == 100) cmt = "博古通今，無人能及！";
+            else if(finalScore >= 90) cmt = "才高八斗！";
+            else if(finalScore >= 70) cmt = "考核通過！";
+            document.getElementById('score-comment').innerText = cmt;
+
+            // Save History
+            saveHistory(finalScore, `卷 ${quizState.level}`);
         }
 
-        function exitQuiz() {
-            if(confirm("確定要離開？進度將保留。")) goToLevelScreen();
-        }
-
-        function saveStandardProgress() {
-            const data = {
-                level: stdLevel, questions: stdQuestions, index: stdIndex, score: stdScore, answers: stdAnswers
-            };
-            localStorage.setItem(getUserKey('save_std'), JSON.stringify(data));
-        }
-        
-        // 標準模式的最愛功能 (需求 10)
-        function toggleStandardFavorite() {
-            let q = stdQuestions[stdIndex];
-            let isFav = toggleBank('favoriteBank', q.id);
-            updateStandardHeartBtn(q.id);
-        }
-        function updateStandardHeartBtn(qid) {
-            let btn = document.getElementById('std-fav-btn');
-            let favs = getFavoriteBank();
-            if(favs.includes(qid)) { btn.classList.add('active'); btn.innerText = "❤"; }
-            else { btn.classList.remove('active'); btn.innerText = "🤍"; }
-        }
-
-        // --- 瀑布流模式 (需求 2, 3, 4, 12, 13) ---
-        function startWaterfallQuiz(mode) {
-            wfMode = mode;
-            let questionsToLoad = [];
-            let saveKey = getUserKey('save_' + mode);
-            let savedData = JSON.parse(localStorage.getItem(saveKey));
-
-            // 準備題目源
-            if (mode === 'speed') {
-                // 需求 12: 依照 json 編號，不隨機
-                questionsToLoad = [...allQuestions].sort((a,b) => a.id - b.id);
-            } else if (mode === 'mistake') {
-                let ids = getMistakeBank();
-                questionsToLoad = allQuestions.filter(q => ids.includes(q.id));
-            } else if (mode === 'favorite') {
-                let ids = getFavoriteBank();
-                questionsToLoad = allQuestions.filter(q => ids.includes(q.id));
-            }
-
-            if (questionsToLoad.length === 0) { alert("此區尚無題目！"); return; }
-
-            // 存檔檢查 (需求 4)
-            if (savedData) {
-                if(confirm("發現上次未完成的進度，是否繼續？")) {
-                    wfQuestions = savedData.questions; // 若是錯題本，題目可能變動，這裡簡單起見載入舊題
-                    wfState = savedData.state;
-                } else {
-                    wfQuestions = questionsToLoad;
-                    wfState = {};
-                    localStorage.removeItem(saveKey);
+        // --- 瀑布流刷題模式 (Waterfall Mode) ---
+        function startWaterfallQuiz(mode, forceNew = false) {
+            // FIX: 使用加上模式後綴的鍵值，避免互相覆蓋
+            const savedKey = getUserKey('waterfallProgress_' + mode);
+            
+            if(!forceNew) {
+                const saved = JSON.parse(localStorage.getItem(savedKey));
+                // 自動恢復進度 (只要有存檔就載入，因為 Key 已經區分開了)
+                if(saved) {
+                    quizState = saved;
+                    renderWaterfallUI();
+                    return;
                 }
-            } else {
-                wfQuestions = questionsToLoad;
-                wfState = {};
             }
 
-            showWaterfallUI();
-            renderWaterfallList();
-            updateWaterfallStats();
+            // Init New
+            quizState = {
+                mode: mode,
+                score: 0,
+                answers: {},
+                locked: {}, // { qId: true/false }
+                qIds: []
+            };
+
+            if(mode === 'speed') {
+                quizState.qIds = allQuestions.map(q => q.id); // 依照 json 順序
+                document.getElementById('wf-mode-title').innerText = "全範圍考核";
+                document.getElementById('wf-mode-icon').innerText = "⚡";
+            } else if(mode === 'mistake') {
+                quizState.qIds = JSON.parse(localStorage.getItem(getUserKey('mistakeBank'))) || [];
+                document.getElementById('wf-mode-title').innerText = "錯題修訂";
+                document.getElementById('wf-mode-icon').innerText = "📕";
+            } else if(mode === 'favorite') {
+                quizState.qIds = JSON.parse(localStorage.getItem(getUserKey('favoriteBank'))) || [];
+                document.getElementById('wf-mode-title').innerText = "佳句收藏";
+                document.getElementById('wf-mode-icon').innerText = "⭐";
+            }
+
+            if(quizState.qIds.length === 0) return alert("目前沒有題目！");
+            
+            renderWaterfallUI();
         }
 
-        function showWaterfallUI() {
+        function renderWaterfallUI() {
             hideAllScreens();
             document.getElementById('waterfall-screen').style.display = 'block';
-            let header = document.getElementById('wf-header');
-            let title = document.getElementById('wf-title');
+            updateWaterfallStats();
             
-            header.className = 'sticky-header'; // reset
-            if(wfMode === 'speed') {
-                header.classList.add('purple-theme');
-                title.innerText = "🚀 極速刷題";
-            } else if (wfMode === 'mistake') {
-                header.style.background = 'var(--accent-color)';
-                title.innerText = "📕 案件重審";
-            } else {
-                header.style.background = 'var(--favorite-color)';
-                title.innerText = "💖 刑律收藏";
-            }
-        }
-
-        function renderWaterfallList() {
-            const list = document.getElementById('wf-list');
+            const list = document.getElementById('waterfall-list');
             list.innerHTML = "";
             
-            wfQuestions.forEach((q, idx) => {
-                let state = wfState[q.id] || { answered: false };
-                let card = document.createElement('div');
-                card.className = `wf-card ${state.answered ? 'locked' : ''}`;
-                card.id = `wf-card-${q.id}`;
+            // Use stored order
+            const questions = allQuestions.filter(q => quizState.qIds.includes(q.id));
+
+            questions.forEach((q, idx) => {
+                const card = document.createElement('div');
+                card.className = 'waterfall-card';
+                card.id = `card-${q.id}`;
                 
-                // 需求 2: 去除 1. 1. 
-                let qText = q.question.replace(/^\d+[\.\、]\s*/, '').replace(/^\d+\s+/, '');
-
-                // 需求 7, 8, 9: 垃圾桶 (僅限錯題/收藏)
-                let trashHtml = '';
-                if(wfMode === 'mistake' || wfMode === 'favorite') {
-                    trashHtml = `<button class="icon-btn trash-btn" onclick="deleteFromWaterfall(${q.id})" title="移除此題">🗑️</button>`;
-                }
-
-                // 需求 2: 愛心按鈕
-                let isFav = getFavoriteBank().includes(q.id);
-                let heartClass = isFav ? 'active' : '';
-                let heartHtml = `<button class="icon-btn heart-btn ${heartClass}" onclick="toggleWaterfallFavorite(${q.id}, this)" title="收藏">❤</button>`;
-
-                let imgHtml = q.image ? `<img src="${q.image}" style="max-width:100%; height:auto; margin:10px 0; border-radius:5px;">` : '';
-
-                let optionsHtml = q.options.map((opt, i) => {
-                    let optClass = 'wf-option';
-                    if (state.answered) {
-                        optClass += ' disabled';
-                        if (getLetter(opt) === getLetter(q.answer)) optClass += ' correct';
-                        if (state.userOption === opt && getLetter(opt) !== getLetter(q.answer)) optClass += ' wrong';
-                    }
-                    let onClick = state.answered ? '' : `onclick="handleWaterfallAnswer(${q.id}, '${opt.replace(/'/g, "\\'")}', this)"`;
-                    return `<div class="${optClass}" ${onClick}>${opt}</div>`;
-                }).join('');
-
-                let explainStyle = state.answered ? 'display:block' : '';
-
-                card.innerHTML = `
-                    <div class="wf-actions">${trashHtml}${heartHtml}</div>
-                    <div class="wf-question-text">${idx+1}. ${qText}</div>
-                    ${imgHtml}
-                    <div class="wf-options">${optionsHtml}</div>
-                    <div id="wf-explain-${q.id}" class="wf-explanation" style="${explainStyle}">
-                        <strong>💡 解析：</strong>${q.explanation}
+                // Header (Question + Actions)
+                const isFav = isFavorite(q.id);
+                const canDelete = (quizState.mode === 'mistake' || quizState.mode === 'favorite');
+                
+                // 修改點：使用空心/實心愛心切換 + &#xFE0E; 強制文字模式
+                let actionsHtml = `
+                    <div class="card-actions">
+                         ${canDelete ? `<span class="action-icon trash" onclick="deleteCardItem('${q.id}')">🗑️</span>` : ''}
+                        <span class="action-icon ${isFav ? 'active' : ''}" onclick="toggleWaterfallFav(this, '${q.id}')">${isFav ? '♥&#xFE0E;' : '♡&#xFE0E;'}</span>
                     </div>
                 `;
+                
+                let imgHtml = q.image ? `<img src="${q.image}" class="wf-img">` : '';
+                
+                // Question Text (Remove "1. 1." duplicates logic)
+                let qTextHtml = `<div class="wf-question-text"><span class="wf-q-badge">#${idx+1}</span>${q.question}</div>`;
+
+                // Options
+                let optionsHtml = '<div class="wf-options">';
+                q.options.forEach(opt => {
+                    let btnClass = 'wf-opt-btn';
+                    let disabled = '';
+                    
+                    if(quizState.locked[q.id]) {
+                        disabled = 'disabled';
+                        const correct = q.answer.substring(0,3);
+                        const val = opt.substring(0,3);
+                        const userSel = quizState.answers[q.id] ? quizState.answers[q.id].substring(0,3) : null;
+                        
+                        if(val === correct) btnClass += ' correct';
+                        if(userSel === val && userSel !== correct) btnClass += ' wrong';
+                    }
+                    
+                    optionsHtml += `<button class="${btnClass}" ${disabled} onclick="handleWaterfallAnswer('${q.id}', '${opt}')">${opt}</button>`;
+                });
+                optionsHtml += '</div>';
+
+                // Explanation
+                let expStyle = quizState.locked[q.id] ? 'display:block' : '';
+                let expHtml = `<div class="wf-explanation" style="${expStyle}"><strong>💡 解析：</strong>${q.explanation||'略'}</div>`;
+
+                card.innerHTML = actionsHtml + qTextHtml + imgHtml + optionsHtml + expHtml;
                 list.appendChild(card);
+
+                // 如果已經鎖定(作答過)，直接上色
+                if(quizState.locked[q.id]) {
+                    card.classList.add('locked');
+                    const correct = q.answer.substring(0,3);
+                    const userSel = quizState.answers[q.id] ? quizState.answers[q.id].substring(0,3) : '';
+                    if(userSel === correct) card.classList.add('card-correct');
+                    else card.classList.add('card-wrong');
+                }
             });
+            
+            // Restore scroll if possible? (Simpler: scroll to top)
+            window.scrollTo(0, 0);
         }
 
-        function handleWaterfallAnswer(qid, option, el) {
-            if(wfState[qid] && wfState[qid].answered) return;
+        function handleWaterfallAnswer(qId, option) {
+            if(quizState.locked[qId]) return;
             
-            let q = wfQuestions.find(i => i.id === qid);
-            let isCorrect = getLetter(option) === getLetter(q.answer);
+            const qData = allQuestions.find(q => q.id === qId);
+            quizState.answers[qId] = option;
+            quizState.locked[qId] = true;
             
-            wfState[qid] = { answered: true, correct: isCorrect, userOption: option };
+            const correct = qData.answer.substring(0,3);
+            const selected = option.substring(0,3);
             
-            // UI 更新 (只更新這張卡)
-            let card = document.getElementById(`wf-card-${qid}`);
-            card.classList.add('locked');
-            let opts = card.querySelectorAll('.wf-option');
-            opts.forEach(optDiv => {
-                optDiv.classList.add('disabled');
-                optDiv.onclick = null;
-                if(getLetter(optDiv.innerText) === getLetter(q.answer)) optDiv.classList.add('correct');
-                if(optDiv.innerText === option && !isCorrect) optDiv.classList.add('wrong');
-            });
-            document.getElementById(`wf-explain-${qid}`).style.display = 'block';
+            // 取得卡片元素
+            const card = document.getElementById(`card-${qId}`);
 
-            // 邏輯處理
-            if(isCorrect) {
+            if(selected === correct) {
+                quizState.score++;
                 audioCorrect.play().catch(()=>{});
-                // 需求 6: 答對不自動移除
+                confetti({ particleCount: 50, origin: { y: 0.8 } });
+                if(card) card.classList.add('card-correct'); // 立即變綠
             } else {
                 audioFail.play().catch(()=>{});
-                addToBank('mistakeBank', qid); // 錯題自動加入
+                addToMistake(qId);
+                if(card) card.classList.add('card-wrong'); // 立即變紅
             }
-
+            
+            // Save Progress (FIX: Use mode-specific key)
+            localStorage.setItem(getUserKey('waterfallProgress_' + quizState.mode), JSON.stringify(quizState));
+            
+            // Update UI (Single Card)
             updateWaterfallStats();
-            saveWaterfallProgress();
+            
+            if(card) {
+                card.classList.add('locked');
+                const btns = card.querySelectorAll('.wf-opt-btn');
+                btns.forEach(btn => {
+                    btn.disabled = true;
+                    const val = btn.innerText.substring(0,3);
+                    if(val === correct) btn.classList.add('correct');
+                    if(val === selected && val !== correct) btn.classList.add('wrong');
+                });
+                card.querySelector('.wf-explanation').style.display = 'block';
+            }
         }
 
         function updateWaterfallStats() {
-            let total = wfQuestions.length;
-            let answered = Object.keys(wfState).length;
-            let correct = Object.values(wfState).filter(s => s.correct).length;
+            const answered = Object.keys(quizState.locked).length;
+            const total = quizState.qIds.length;
+            document.getElementById('wf-answered').innerText = answered;
+            document.getElementById('wf-total').innerText = total;
+            document.getElementById('wf-score').innerText = quizState.score;
+        }
+
+        // --- Common Logic (Favorites, Mistakes, History) ---
+        function addToMistake(id) {
+            let list = JSON.parse(localStorage.getItem(getUserKey('mistakeBank'))) || [];
+            if(!list.includes(id)) {
+                list.push(id);
+                localStorage.setItem(getUserKey('mistakeBank'), JSON.stringify(list));
+                updateDashboardTools();
+            }
+        }
+
+        function isFavorite(id) {
+            let list = JSON.parse(localStorage.getItem(getUserKey('favoriteBank'))) || [];
+            return list.includes(id);
+        }
+
+        function toggleWaterfallFav(btn, id) {
+            let list = JSON.parse(localStorage.getItem(getUserKey('favoriteBank'))) || [];
+            if(list.includes(id)) {
+                list = list.filter(x => x !== id);
+                btn.classList.remove('active');
+                // 修改點：取消收藏時，變回空心愛心 + 強制文字模式
+                btn.innerHTML = '♡&#xFE0E;';
+            } else {
+                list.push(id);
+                btn.classList.add('active');
+                // 修改點：收藏時，變為實心愛心 + 強制文字模式
+                btn.innerHTML = '♥&#xFE0E;';
+            }
+            localStorage.setItem(getUserKey('favoriteBank'), JSON.stringify(list));
+            updateDashboardTools();
+        }
+
+        function updateDashboardTools() {
+            let mList = JSON.parse(localStorage.getItem(getUserKey('mistakeBank'))) || [];
+            let fList = JSON.parse(localStorage.getItem(getUserKey('favoriteBank'))) || [];
             
-            document.getElementById('wf-score').innerText = correct;
-            document.getElementById('wf-total').innerText = answered; // 顯示已答題數/總題數比較合理
-            document.getElementById('wf-progress-bar').style.width = ((answered / total) * 100) + "%";
+            const btnM = document.getElementById('btn-mistake');
+            const btnF = document.getElementById('btn-favorite');
+            
+            if(mList.length > 0) {
+                btnM.style.display = 'inline-block';
+                document.getElementById('mistake-count').innerText = mList.length;
+            } else btnM.style.display = 'none';
+
+            if(fList.length > 0) {
+                btnF.style.display = 'inline-block';
+                document.getElementById('favorite-count').innerText = fList.length;
+            } else btnF.style.display = 'none';
         }
 
-        function toggleWaterfallFavorite(qid, btn) {
-            let isFav = toggleBank('favoriteBank', qid);
-            if(isFav) btn.classList.add('active'); else btn.classList.remove('active');
+        function deleteCardItem(id) {
+            if(!confirm("確定要從此清單中刪除這題嗎？")) return;
+            if(!confirm("再次確認：刪除後將無法恢復！")) return;
+            
+            // Remove from list (Mistake or Favorite)
+            if(quizState.mode === 'mistake') {
+                let list = JSON.parse(localStorage.getItem(getUserKey('mistakeBank'))) || [];
+                list = list.filter(x => x !== id);
+                localStorage.setItem(getUserKey('mistakeBank'), JSON.stringify(list));
+                quizState.qIds = list;
+            } else if (quizState.mode === 'favorite') {
+                let list = JSON.parse(localStorage.getItem(getUserKey('favoriteBank'))) || [];
+                list = list.filter(x => x !== id);
+                localStorage.setItem(getUserKey('favoriteBank'), JSON.stringify(list));
+                quizState.qIds = list;
+            }
+
+            // Remove visual element
+            const card = document.getElementById(`card-${id}`);
+            if(card) card.remove();
+            
+            // FIX: Ensure this deletion is saved to current progress so it doesn't reappear on resume
+            localStorage.setItem(getUserKey('waterfallProgress_' + quizState.mode), JSON.stringify(quizState));
+            
+            // Update stats
+            updateWaterfallStats();
+            updateDashboardTools();
+            
+            if(quizState.qIds.length === 0) {
+                alert("清單已空！");
+                exitQuiz();
+            }
         }
 
-        // 需求 7, 8, 9: 刪除邏輯
-        function deleteFromWaterfall(qid) {
-            if(confirm("確定要將此題從目前列表中移除？")) {
-                if(confirm("再次確認：真的要移除嗎？(此操作不可逆)")) {
-                    // 從目前的列表中移除
-                    wfQuestions = wfQuestions.filter(q => q.id !== qid);
-                    // 同步移除 LocalStorage 的 Bank
-                    if(wfMode === 'mistake') removeFromBank('mistakeBank', qid);
-                    if(wfMode === 'favorite') removeFromBank('favoriteBank', qid);
-                    
-                    // 重繪
-                    renderWaterfallList();
-                    saveWaterfallProgress();
+        function toggleStandardFavorite() {
+            if(!currentQuizData[quizState.currentIndex]) return;
+            const id = currentQuizData[quizState.currentIndex].id;
+            let list = JSON.parse(localStorage.getItem(getUserKey('favoriteBank'))) || [];
+            
+            if(list.includes(id)) {
+                list = list.filter(x => x !== id);
+            } else {
+                list.push(id);
+            }
+            localStorage.setItem(getUserKey('favoriteBank'), JSON.stringify(list));
+            updateStandardFavoriteUI(id);
+            updateDashboardTools();
+        }
+
+        function updateStandardFavoriteUI(id) {
+            let list = JSON.parse(localStorage.getItem(getUserKey('favoriteBank'))) || [];
+            const btn = document.getElementById('std-fav-btn');
+            if(list.includes(id)) {
+                btn.innerText = '★'; btn.style.background = 'var(--favorite-color)'; btn.style.color = 'white';
+            } else {
+                btn.innerText = '☆'; btn.style.background = 'white'; btn.style.color = 'var(--favorite-color)';
+            }
+        }
+
+        function exitQuiz() {
+            if(confirm("確定要暫時離開？(系統將自動儲存進度，並記錄目前成績)")) {
+                // 若為標準模式，中途退出時將目前成績寫入歷史紀錄
+                if (quizState.mode === 'standard' && currentQuizData.length > 0) {
+                    const currentScore = Math.round((quizState.score / currentQuizData.length) * 100);
+                    saveHistory(currentScore, `卷 ${quizState.level} (未完)`);
                 }
+                
+                goToDashboard();
             }
         }
 
-        function saveWaterfallProgress() {
-            let key = getUserKey('save_' + wfMode);
-            localStorage.setItem(key, JSON.stringify({
-                questions: wfQuestions,
-                state: wfState
-            }));
-        }
+        function restartQuiz() {
+            if (!confirm("確定要重新開始嗎？所有進度將被清除！")) return;
+            if (!confirm("再次確認：清除後無法復原，確定重新開始？")) return;
 
-        function exitWaterfall() {
-            if(confirm("確定要離開極速模式？進度已自動儲存。")) {
-                goToLevelScreen();
+            if (quizState.mode === 'standard') {
+                localStorage.removeItem(getUserKey('standardProgress'));
+                startStandardQuiz(quizState.level, true); // forceNew = true
+            } else {
+                // FIX: Use mode-specific key
+                localStorage.removeItem(getUserKey('waterfallProgress_' + quizState.mode));
+                startWaterfallQuiz(quizState.mode, true); // forceNew = true
             }
         }
 
-        // --- 通用 Bank 操作 ---
-        function addToBank(bankName, id) {
-            let bank = JSON.parse(localStorage.getItem(getUserKey(bankName))) || [];
-            if(!bank.includes(id)) {
-                bank.push(id);
-                localStorage.setItem(getUserKey(bankName), JSON.stringify(bank));
-            }
-        }
-        function removeFromBank(bankName, id) {
-            let bank = JSON.parse(localStorage.getItem(getUserKey(bankName))) || [];
-            bank = bank.filter(i => i !== id);
-            localStorage.setItem(getUserKey(bankName), JSON.stringify(bank));
-        }
-        function toggleBank(bankName, id) {
-            let bank = JSON.parse(localStorage.getItem(getUserKey(bankName))) || [];
-            let exists = bank.includes(id);
-            if(exists) bank = bank.filter(i => i !== id);
-            else bank.push(id);
-            localStorage.setItem(getUserKey(bankName), JSON.stringify(bank));
-            return !exists;
-        }
-
-        // --- 紀錄與圖鑑 (保留原功能) ---
-        function saveHistoryRecord(mode, score, qs, ans) {
+        function saveHistory(score, modeTitle) {
             let history = JSON.parse(localStorage.getItem(getUserKey('quizHistory'))) || [];
-            let record = { id: Date.now(), mode: mode, score: score, date: new Date().toLocaleString(), qIds: qs.map(q=>q.id), answers: ans };
-            history.push(record);
+            history.push({
+                date: new Date().toLocaleString(),
+                score: score,
+                mode: modeTitle
+            });
             localStorage.setItem(getUserKey('quizHistory'), JSON.stringify(history));
         }
+        
         function showHistory() {
             hideAllScreens();
             document.getElementById('history-screen').style.display = 'block';
-            let list = document.getElementById('history-list'); list.innerHTML = "";
+            const list = document.getElementById('history-list');
             let history = JSON.parse(localStorage.getItem(getUserKey('quizHistory'))) || [];
-            if(history.length === 0) list.innerHTML = "<li>無紀錄</li>";
-            else history.reverse().forEach(h => {
-                let li = document.createElement('li');
-                li.innerHTML = `<div><strong>${h.mode}</strong> <span style="color:${h.score>=PASS_SCORE?'green':'red'}">${h.score}分</span> <small>${h.date}</small></div>`;
-                list.appendChild(li);
-            });
+            list.innerHTML = history.reverse().map(h => `
+                <li style="background:#fff; padding:15px; border-bottom:1px solid #eee; margin-bottom:10px; border-radius:5px;">
+                    <strong>${h.mode}</strong> - <span style="color:${h.score>=70?'green':'red'}">${h.score}分</span>
+                    <br><small>${h.date}</small>
+                </li>
+            `).join('') || '<p style="text-align:center">無紀錄</p>';
         }
+
         function showCollection() {
             hideAllScreens();
             document.getElementById('collection-screen').style.display = 'block';
-            let grid = document.getElementById('collection-grid'); grid.innerHTML = "";
-            let progress = getProgress();
+            const grid = document.getElementById('collection-grid');
+            grid.innerHTML = "";
+            const progress = JSON.parse(localStorage.getItem(getUserKey('quizProgress'))) || { levelScores: {} }; // bug fix: renamed scores to match
+            
+            const scores = progress.scores || {};
+
             for(let i=1; i<=LEVEL_CONFIG.length; i++) {
-                let unlocked = (progress.levelScores[i] || 0) >= PASS_SCORE;
-                let div = document.createElement('div');
-                div.className = `card-item ${unlocked?'':'locked'}`;
-                let num = i<10 ? '0'+i : i;
-                div.innerHTML = `<img src="images/card_${num}.jpg" class="card-img" onerror="this.style.display='none'">
-                                 <div class="card-overlay">${unlocked?'':'🔒'} 第${i}關</div>`;
-                if(unlocked) div.onclick = () => openCardModal(`images/card_${num}.jpg`, `第 ${i} 關證物`);
-                grid.appendChild(div);
+                const num = i<10?`0${i}`:`${i}`;
+                const unlocked = (scores[i] >= 70);
+                const item = document.createElement('div');
+                item.className = `card-item ${unlocked?'':'locked'}`;
+                
+                if(unlocked) {
+                    item.innerHTML = `<img src="images/card_${num}.jpg">`;
+                    item.onclick = () => openCardModal(`images/card_${num}.jpg`, `文獻卡 #${num}`);
+                } else {
+                    item.innerHTML = `<span style="font-size:2em;">🔒</span><br>卷 ${i}`;
+                }
+                grid.appendChild(item);
             }
         }
+
         function openCardModal(src, title) {
             document.getElementById('modal-img').src = src;
             document.getElementById('modal-title').innerText = title;
             document.getElementById('card-modal').style.display = 'flex';
         }
         function closeCardModal() { document.getElementById('card-modal').style.display = 'none'; }
+        
+        function logout() { location.reload(); }
 
-        function hideAllScreens() {
-            const screens = ['welcome-screen', 'level-screen', 'quiz-content', 'waterfall-screen', 'score-box', 'history-screen', 'history-detail-screen', 'collection-screen'];
-            screens.forEach(id => document.getElementById(id).style.display = 'none');
+        // --- YouTube & Audio ---
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('yt-player', {
+                height: '100%', width: '100%',
+                videoId: YOUTUBE_PLAYLIST[currentVideoIdx], // 修改點：使用索引載入
+                playerVars: { 'playsinline': 1, 'controls': 0, 'disablekb': 1, 'fs': 0, 'rel': 0 },
+                events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange }
+            });
         }
+        function onPlayerReady() { isPlayerReady = true; player.setVolume(30); }
+        function onPlayerStateChange(e) { 
+            isPlaying = (e.data == YT.PlayerState.PLAYING);
+            document.getElementById('main-play-btn').innerText = isPlaying ? '⏸' : '▶';
+            if(e.data == YT.PlayerState.ENDED) player.playVideo(); // Loop current video
+        }
+        function togglePlay() { if(isPlayerReady) isPlaying ? player.pauseVideo() : player.playVideo(); }
+        // 修改點：上一首功能
+        function prevTrack() { 
+            if(isPlayerReady) {
+                currentVideoIdx = (currentVideoIdx - 1 + YOUTUBE_PLAYLIST.length) % YOUTUBE_PLAYLIST.length;
+                player.loadVideoById(YOUTUBE_PLAYLIST[currentVideoIdx]);
+            }
+        }
+        // 修改點：下一首功能
+        function nextTrack() { 
+            if(isPlayerReady) {
+                currentVideoIdx = (currentVideoIdx + 1) % YOUTUBE_PLAYLIST.length;
+                player.loadVideoById(YOUTUBE_PLAYLIST[currentVideoIdx]);
+            }
+        } 
+        function setVolume(v) { if(isPlayerReady) player.setVolume(v); }
+        function toggleVideoDisplay() {
+            const wrap = document.getElementById('yt-wrapper');
+            const btn = document.getElementById('toggle-video-btn');
+            // Logic for mobile vs desktop toggle
+            if(window.innerWidth <= 768) wrap.classList.toggle('mobile-visible');
+            else wrap.classList.toggle('video-hidden');
+            
+            const hidden = wrap.classList.contains('video-hidden') && !wrap.classList.contains('mobile-visible');
+            btn.classList.toggle('active', !hidden);
+        }
+        function changeMode() { /* Loop handled by simple restart for now */ }
 
     </script>
 </body>
