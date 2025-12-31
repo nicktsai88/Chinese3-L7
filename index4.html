@@ -66,148 +66,10 @@
         .player-controls { display: flex; align-items: center; gap: 8px; }
         .ctrl-btn { background: none; border: none; cursor: pointer; color: #7f8c8d; font-size: 1.4em; padding: 5px; }
         .ctrl-btn:hover, .ctrl-btn.active { color: var(--primary-color); }
-        
-        /* AI 按鈕樣式 */
-        .ai-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: 20px;
-            padding: 5px 15px;
-            font-size: 0.9em;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            border: none;
-            cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .ai-btn:hover { background-color: var(--secondary-color); transform: translateY(-2px); }
-
         .volume-container { display: flex; align-items: center; gap: 5px; }
         .volume-slider { width: 60px; accent-color: var(--primary-color); cursor: pointer;}
         .mode-btn { border: 1px solid #bdc3c7; background: #fff; padding: 5px 10px; border-radius: 20px; font-size: 0.8em; cursor: pointer; display: flex; align-items: center; gap: 5px;}
         .mode-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
-
-        /* --- AI Chat Window --- */
-        #ai-chat-window {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 350px;
-            height: 500px;
-            background: #fff;
-            border-radius: 15px;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
-            border: 2px solid var(--primary-color);
-            z-index: 20000;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            font-family: 'Noto Sans TC', sans-serif;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform-origin: bottom right;
-        }
-        #ai-chat-window.hidden {
-            transform: scale(0);
-            pointer-events: none;
-        }
-        
-        .chat-header {
-            background: var(--primary-color);
-            color: white;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: bold;
-            font-size: 1.1em;
-        }
-        .chat-header .close-chat { cursor: pointer; font-size: 1.2em; }
-        
-        .chat-body {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            background-color: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .chat-message {
-            max-width: 80%;
-            padding: 10px 15px;
-            border-radius: 15px;
-            font-size: 0.95em;
-            line-height: 1.5;
-            position: relative;
-            word-wrap: break-word;
-        }
-        .chat-message.ai {
-            align-self: flex-start;
-            background: white;
-            border: 1px solid #ddd;
-            border-top-left-radius: 2px;
-            color: var(--text-color);
-        }
-        .chat-message.user {
-            align-self: flex-end;
-            background: var(--secondary-color);
-            color: white;
-            border-top-right-radius: 2px;
-        }
-        .chat-message.system {
-            align-self: center;
-            background: #eee;
-            color: #666;
-            font-size: 0.8em;
-            padding: 5px 10px;
-        }
-        
-        .chat-input-area {
-            padding: 10px;
-            background: white;
-            border-top: 1px solid #eee;
-            display: flex;
-            gap: 10px;
-        }
-        .chat-input-area input {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 20px;
-            outline: none;
-            font-size: 1em;
-            margin: 0; /* Override generic input style */
-            width: auto; /* Override generic input style */
-            text-align: left; /* Override generic input style */
-        }
-        .chat-input-area input:focus { border-color: var(--primary-color); }
-        .send-btn {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.2s;
-        }
-        .send-btn:hover { background: var(--secondary-color); transform: scale(1.1); }
-        
-        /* Loading Dots */
-        .typing-indicator span {
-            display: inline-block; width: 6px; height: 6px; background-color: #aaa;
-            border-radius: 50%; margin: 0 2px;
-            animation: typing 1s infinite;
-        }
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
         /* --- 容器通用 --- */
         .container-box {
@@ -420,14 +282,6 @@
             body { padding-top: 80px; }
             #yt-wrapper { display: none; position: fixed; bottom: 10px; right: 10px; width: 120px; height: 67px; top: auto; left: auto; transform: none; }
             #yt-wrapper.mobile-visible { display: block; }
-            
-            /* AI Chat RWD */
-            #ai-chat-window {
-                width: 90%;
-                height: 60vh;
-                bottom: 70px; /* above player */
-                right: 5%;
-            }
         }
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
@@ -456,34 +310,12 @@
                     <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="30" oninput="setVolume(this.value)">
                 </div>
 
-                <!-- 新增：AI 書僮按鈕 -->
-                <button class="ai-btn" onclick="toggleAIChat()">
-                    <span>🤖</span> AI書僮
-                </button>
-
                 <button id="toggle-video-btn" class="ctrl-btn active" onclick="toggleVideoDisplay()">👁️</button>
                 
                 <button id="mode-btn" class="mode-btn" onclick="changeMode()">
                     <span id="mode-icon">🔁</span>
                 </button>
             </div>
-        </div>
-    </div>
-
-    <!-- AI 聊天視窗 -->
-    <div id="ai-chat-window" class="hidden">
-        <div class="chat-header">
-            <span>🎓 國文AI書僮</span>
-            <span class="close-chat" onclick="toggleAIChat()">×</span>
-        </div>
-        <div id="chat-body" class="chat-body">
-            <div class="chat-message ai">
-                學子你好，我是你的AI書僮。關於《張釋之執法》或其他國文問題，儘管問我！
-            </div>
-        </div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-input" placeholder="輸入問題... (Ex: 何謂廷尉?)" onkeypress="handleChatKeyPress(event)">
-            <button class="send-btn" onclick="sendAIMessage()">➤</button>
         </div>
     </div>
 
@@ -649,9 +481,6 @@
         // 修改點 3: LocalStorage 前綴改為 zhang_
         const APP_PREFIX = 'zhang_';
         
-        // ★★★ 請在此處填入您的 Google Gemini API Key ★★★
-        const GEMINI_API_KEY = "AIzaSyBJO0V8svBYzcdAT_6vkzQ2bXtrkOpojo4"; 
-
         let player, isPlayerReady = false, isPlaying = false;
         let allQuestions = [], currentQuizData = [];
         let userName = "", currentAvatar = "Chris.png";
@@ -1334,95 +1163,6 @@
             btn.classList.toggle('active', !hidden);
         }
         function changeMode() { /* Loop handled by simple restart for now */ }
-
-        // --- AI Chat Logic ---
-        function toggleAIChat() {
-            const win = document.getElementById('ai-chat-window');
-            win.classList.toggle('hidden');
-        }
-
-        function handleChatKeyPress(e) {
-            if(e.key === 'Enter') sendAIMessage();
-        }
-
-        async function sendAIMessage() {
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if(!text) return;
-
-            // 檢查是否已設定 API Key
-            if(!GEMINI_API_KEY) {
-                addMessageToChat('system', '⚠️ 請先在程式碼中的 GEMINI_API_KEY 變數填入您的 API Key。');
-                return;
-            }
-
-            // 1. Show User Message
-            addMessageToChat('user', text);
-            input.value = '';
-
-            // 2. Show Loading
-            const loadingId = addMessageToChat('ai', '<div class="typing-indicator"><span></span><span></span><span></span></div>');
-
-            // 3. Call AI
-            try {
-                const response = await callAI(text);
-                // Remove loading, show real message
-                document.getElementById(loadingId).remove();
-                addMessageToChat('ai', response);
-            } catch(e) {
-                document.getElementById(loadingId).remove();
-                addMessageToChat('system', 'AI 書僮暫時休息中，請檢查網路或 Key 是否正確。');
-            }
-        }
-
-        function addMessageToChat(sender, html) {
-            const body = document.getElementById('chat-body');
-            const div = document.createElement('div');
-            const id = 'msg-' + Date.now();
-            div.id = id;
-            div.className = `chat-message ${sender}`;
-            div.innerHTML = html;
-            body.appendChild(div);
-            body.scrollTop = body.scrollHeight;
-            return id;
-        }
-
-        // 真實串接 Google Gemini API
-        async function callAI(query) {
-            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-            
-            const prompt = `你是精通中國文學的國文老師，請以繁體中文、親切且專業的口吻，回答學生關於《張釋之執法》的問題。
-            
-            學生問題：${query}
-            
-            請注意：
-            1. 回答盡量簡潔有力，適合國中生閱讀。
-            2. 若問題與課文無關，請幽默地將話題引導回《張釋之執法》或法治精神。
-            3. 若涉及解釋字詞，請提供準確的釋義。`;
-
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ 
-                            parts: [{ text: prompt }] 
-                        }]
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
-                }
-
-                const data = await response.json();
-                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                return aiText || "抱歉，書僮暫時無法回答此問題。";
-            } catch (error) {
-                console.error("AI Error:", error);
-                throw error;
-            }
-        }
 
     </script>
 </body>
