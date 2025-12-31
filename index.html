@@ -1391,14 +1391,14 @@
         async function callAI(query) {
             const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
             
-            const prompt = `你是精通中國文學的國文老師，請以繁體中文、親切且專業的口吻，回答學生關於《張釋之執法》的問題。
-            
-            學生問題：${query}
-            
-            請注意：
-            1. 回答盡量簡潔有力，適合國中生閱讀。
-            2. 若問題與課文無關，請幽默地將話題引導回《張釋之執法》或法治精神。
-            3. 若涉及解釋字詞，請提供準確的釋義。`;
+            const prompt = `你是AI國文小幫手。請針對以下問題提供簡明扼要的回答。
+
+            問題：${query}
+
+            回答原則：
+            1. 直接回答問題核心，不需過多鋪陳，力求簡潔。
+            2. 若問題與《張釋之執法》無關，請直接回答該問題，絕對不要刻意將話題引導回課文或法治精神。
+            3. 使用繁體中文。`;
 
             try {
                 const response = await fetch(API_URL, {
