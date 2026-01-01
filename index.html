@@ -123,7 +123,9 @@
             font-weight: bold;
             font-size: 1.1em;
         }
-        .chat-header .close-chat { cursor: pointer; font-size: 1.2em; }
+        .chat-header-controls { display: flex; gap: 10px; align-items: center; }
+        .chat-header-icon { cursor: pointer; font-size: 1.2em; transition: 0.2s; opacity: 0.8; }
+        .chat-header-icon:hover { opacity: 1; transform: scale(1.1); }
         
         .chat-body {
             flex: 1;
@@ -474,7 +476,10 @@
     <div id="ai-chat-window" class="hidden">
         <div class="chat-header">
             <span>🎓 國文AI書僮</span>
-            <span class="close-chat" onclick="toggleAIChat()">×</span>
+            <div class="chat-header-controls">
+                <span class="chat-header-icon" onclick="resetApiKey()" title="設定 API Key">🔑</span>
+                <span class="chat-header-icon" onclick="toggleAIChat()">×</span>
+            </div>
         </div>
         <div id="chat-body" class="chat-body">
             <div class="chat-message ai">
@@ -649,8 +654,8 @@
         // 修改點 3: LocalStorage 前綴改為 zhang_
         const APP_PREFIX = 'zhang_';
         
-        // ★★★ 請在此處填入您的 Google Gemini API Key ★★★
-        const GEMINI_API_KEY = "AIzaSyBJO0V8svBYzcdAT_6vkzQ2bXtrkOpojo4"; 
+        // 已移除硬編碼的 GEMINI_API_KEY
+        // 改用 localStorage 存取，key 為: zhang_gemini_key
 
         let player, isPlayerReady = false, isPlaying = false;
         let allQuestions = [], currentQuizData = [];
@@ -1345,14 +1350,37 @@
             if(e.key === 'Enter') sendAIMessage();
         }
 
+        // 新增：取得 API Key 的輔助函式
+        function getApiKey() {
+            let key = localStorage.getItem(APP_PREFIX + 'gemini_key');
+            if (!key) {
+                key = prompt("首次使用 AI 書僮，請輸入您的 Google Gemini API Key：");
+                if (key) {
+                    localStorage.setItem(APP_PREFIX + 'gemini_key', key.trim());
+                }
+            }
+            return key;
+        }
+
+        // 新增：重設 API Key 的函式
+        function resetApiKey() {
+            const currentKey = localStorage.getItem(APP_PREFIX + 'gemini_key') || "";
+            const newKey = prompt("重設 API Key：", currentKey);
+            if (newKey !== null) { // 使用者沒有按取消
+                localStorage.setItem(APP_PREFIX + 'gemini_key', newKey.trim());
+                alert("API Key 已更新！");
+            }
+        }
+
         async function sendAIMessage() {
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if(!text) return;
 
-            // 檢查是否已設定 API Key
-            if(!GEMINI_API_KEY) {
-                addMessageToChat('system', '⚠️ 請先在程式碼中的 GEMINI_API_KEY 變數填入您的 API Key。');
+            // 改用 getApiKey() 動態取得或要求輸入 Key
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                addMessageToChat('system', '⚠️ 需要輸入 API Key 才能使用 AI 書僮功能。');
                 return;
             }
 
@@ -1365,13 +1393,19 @@
 
             // 3. Call AI
             try {
-                const response = await callAI(text);
+                // 將 apiKey 傳入 callAI
+                const response = await callAI(text, apiKey);
                 // Remove loading, show real message
                 document.getElementById(loadingId).remove();
                 addMessageToChat('ai', response);
             } catch(e) {
                 document.getElementById(loadingId).remove();
-                addMessageToChat('system', 'AI 書僮暫時休息中，請檢查網路或 Key 是否正確。');
+                // 錯誤處理優化：提示重設 Key
+                if (confirm("AI 連線失敗 (可能是 API Key 無效或網路問題)。\n是否要重新輸入 API Key？")) {
+                    resetApiKey();
+                } else {
+                    addMessageToChat('system', 'AI 書僮暫時休息中。');
+                }
             }
         }
 
@@ -1388,8 +1422,9 @@
         }
 
         // 真實串接 Google Gemini API
-        async function callAI(query) {
-            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        async function callAI(query, apiKey) {
+            // 使用傳入的 apiKey
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
             
             const prompt = `你是AI國文小幫手。請針對以下問題提供簡明扼要的回答。
 
